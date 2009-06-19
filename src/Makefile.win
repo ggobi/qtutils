@@ -1,0 +1,16 @@
+
+## use predefined project file (don't create one).  Needs include path hard coded.
+
+all:
+	echo "Using Makefile.win" 
+	cp qvizexpt.pro.win qvizexpt.pro
+	qmake -o Makefile.qvizexpt
+	sh ./replace.sh Makefile.qvizexpt
+	sh ./replace.sh Makefile.qvizexpt.Release
+	sh ./replace.sh Makefile.qvizexpt.Debug
+	make -f Makefile.qvizexpt
+	cp release/* .
+
+clean:
+	echo "Using Makefile.win" 
+	rm -rf *.so *.o *.a *.dll Makefile.qt* qvizexpt.pro libqt* moc*.cpp debug release *~

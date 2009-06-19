@@ -1,0 +1,28 @@
+
+ o Rename to qtutils eventually (make older qtutils obsolete)
+
+ o High level interface for file.show/page type things?
+
+ o Keyboard shortcut for executing selected R code in editor (through actions?)
+
+ o Allow saving files from editor (qsaveEditor?)
+
+ o A data browser: show list of available datasets, and double-click
+   to see help page?
+
+ o An environment browser, but it's hard to decide when to do a
+   tree-like thing (lists, environments) and when to display a
+   node-like thing (data frame, function).  Maybe have a qstr()
+   generic, which for nodes just shows them, and for list-like objects
+   creates a list where clicking on any element x calls qstr(x) on a
+   pane.
+
+ o control of sizepolicy
+
+ o control over alignment policy
+
+
+FIXME: We currently have no good way to handle overloaded C++ methods.
+   For example, QTableWidget::setItem() and QListWidget::setItem()
+
+

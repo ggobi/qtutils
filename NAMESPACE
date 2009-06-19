@@ -1,0 +1,45 @@
+
+
+useDynLib(qtutils, .registration = TRUE)
+
+export(qfile.choose, qdir.choose, qgetColor,
+       qgetDouble, qgetInteger, qgetText)
+
+export(qexport, qhelp, qeditor)
+
+export(qtableWidget, qisSortingEnabled, qsetSortingEnabled, qsetItem,
+       qsetCellWidget, qresizeColumnsToContents,
+       qresizeRowsToContents, qsetHeaderLabels, qsetDim,
+       qcurrentRow, qcurrentColumn)
+
+export(qlistWidget, qitem, qaddItem, qsetItemToolTip)
+
+export(qdataview, qstr, qrecover, qbrowser)
+
+S3method(qstr, default)
+S3method(qstr, data.frame)
+S3method(qstr, table)
+S3method(qstr, "function")
+S3method(qstr, environment)
+S3method(qstr, list)
+
+S3method(qdataview, matrix)
+S3method(qdataview, table)
+S3method(qdataview, array)
+S3method(qdataview, data.frame)
+
+
+
+export(data.import, data.browse, qpager)
+
+
+## Procedure to add new wrapper functions:
+
+##  (1) Add suitable file(s) in src/ and include in createProject.sh
+##  (2) Register .Call-able entry points in src/init.c (make sure they
+##      are declared inside extern "C" in both places).
+##  (3) Add .Call wrappers in R/
+##  (4) Add in NAMESPACE
+
+
+
