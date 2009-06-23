@@ -1,4 +1,6 @@
 
+import(qtbase)
+import(qtgui)
 
 useDynLib(qtutils, .registration = TRUE)
 
