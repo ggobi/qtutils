@@ -12,9 +12,6 @@
 #include <QColorDialog>
 #include <QInputDialog>
 
-#include <R.h>
-#include <Rinternals.h>
-
 #include <qtbase.h>
 
 extern "C" {
