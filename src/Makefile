@@ -1,6 +1,6 @@
 
 all:
-	./createProject.sh
+	bash createProject.sh
 	make -f Makefile.qtutils
 	if test -e libqtutils.so; then cp libqtutils.so qtutils.so; fi
 	## for macx:
