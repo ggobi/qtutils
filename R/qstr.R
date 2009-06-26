@@ -125,12 +125,11 @@ qstr.listOrEnv <- function(x, ...)
 ##              handler = handleSelection,
 ##              ## which = "cellClicked_int_int")
 ##              which = "itemClicked_qlistwidgetitem")
-    qconnect(wlist,
-             user.data = user.data,
-             handler = handleSelection,
-             ## which = "cellClicked_int_int")
-             which = "itemActivated_qlistwidgetitem")
-    
+    attr(container, "activation.handler") <- 
+        qconnect(wlist,
+                 signal = "itemActivated",
+                 user.data = user.data,
+                 handler = handleSelection)    
     container
 }
 
