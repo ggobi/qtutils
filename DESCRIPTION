@@ -2,7 +2,7 @@ Package: qtutils
 Version: 0.0-1
 Title: Miscellaneous Qt-based utilities
 Author: Deepayan Sarkar
-Depends: R (>= 2.6.0), qtbase, qtgui, qtconnect
+Depends: R (>= 2.6.0), qtbase, qtgui
 Imports: qtbase, qtgui
 LinkingTo: qtbase
 Maintainer: Deepayan Sarkar <deepayan.sarkar@gmail.com>
