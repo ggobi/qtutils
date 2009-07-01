@@ -9,12 +9,18 @@ export(qfile.choose, qdir.choose, qgetColor,
 
 export(qexport, qhelp, qeditor)
 
+S3method(qexport, QWidget)
+S3method(qexport, QGraphicsView)
+
+
 export(qtableWidget, qisSortingEnabled, qsetSortingEnabled, qsetItem,
        qsetCellWidget, qresizeColumnsToContents,
        qresizeRowsToContents, qsetHeaderLabels, qsetDim,
        qcurrentRow, qcurrentColumn)
 
-export(qlistWidget, qitem, qaddItem, qsetItemToolTip)
+export(qlistWidget, qitem, qsetItemToolTip)
+
+S3method(qaddItem, QListWidget)
 
 export(qdataview, qstr, qrecover, qbrowser)
 

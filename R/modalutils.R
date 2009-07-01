@@ -23,11 +23,13 @@ qdir.choose <- function(caption = "", dir = "", parent = NULL)
           if (is(parent, "QWidget")) parent else NULL)
 }
 
-qexport <-
+qexport <- function(x, ...) UseMethod("qexport")
+
+qexport.QWidget <-
     function(x,
              file = qfile.choose(caption = "Choose output file",
                                  allow.new = TRUE, parent = x),
-             type)
+             type, ...)
 {
     file <- as.character(file)
     stopifnot(length(file) == 1)
@@ -40,12 +42,22 @@ qexport <-
                 else if (tolower(extension) %in% "svg") "svg"
                 else "raster"
         switch(type,
-               svg = .Call(qtbase:::renderWidgetToSVG, x, file),
-               raster = .Call(qtbase:::renderWidgetToPixmap, x, file),
-               vector = .Call(qtbase:::renderWidget, x, file))
+               svg = qrenderToSVG(x, file),
+               raster = qrenderToPixmap(x, file),
+               vector = qrender(x, file))
         invisible()
     }
 }
+
+## FIXME: make this accept a file argument
+qexport.QGraphicsView <-
+    function(x, ...)
+{
+    qrenderGraphicsView(x)
+}
+
+
+
 
 qgetColor <- function(parent = NULL)
 {

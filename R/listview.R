@@ -9,7 +9,7 @@ qitem <- function(x, row = qcurrentRow(x))
     .Call(qt_qitem, x, row)
 }
 
-qaddItem <- function(x, labels)
+qaddItem.QListWidget <- function(x, labels)
 {
     .Call(qt_qaddItem, x, as.character(labels))
 }
