@@ -27,9 +27,12 @@ qstr.table <- function(x, ...)
 {
     if (length(dim(x)) == 2) qdataview(x)
     else qstr.default(x, ...)
-
 }
 
+qstr.matrix <- function(x, ...)
+{
+    qdataview(x)
+}
 
 S4methodsList <- function(x)
 {
@@ -135,7 +138,6 @@ qstr.listOrEnv <- function(x, ...)
 
 qstr.list <- qstr.listOrEnv
 qstr.environment <- qstr.listOrEnv
-
 
 
 

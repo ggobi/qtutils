@@ -18,13 +18,13 @@ file.chooser <- function()
              tfield = file.loc,
              file.button = file.button,
              layout = l)
-    ans$click.handler <- 
-        qconnect(file.button, 
-                 signal = "clicked",
-                 handler = function(x) {
-                     qsetText(x$tfield, qfile.choose(parent = x$container))
-                 },
-                 user.data = ans)
+    qconnect(file.button, 
+             signal = "clicked",
+             handler = function(x) {
+                 qsetText(x$tfield, qfile.choose(caption = "Choose File to Import",
+                                                 parent = x$container))
+             },
+             user.data = ans)
     ans
 }
 
@@ -133,58 +133,56 @@ data.import <- function(file = "")
     preview.env$importbutton <- NULL
     preview.env$done <- FALSE
     qaddWidgetToLayout(l, rto$container, 1, 1)
-    preview.handler <- 
-        qconnect(rto$preview,
-                 signal = "clicked",
-                 user.data = list(layout = l, args = rto$wlist, preview.button = rto$preview, preview.env = preview.env),
-                 handler = function(x) {
-                     vals <- lapply(x$args, get.field.value)
-                     ## str(vals)
-                     df <-
-                         try(read.table(vals$file, 
-                                        header = vals$header,
-                                        sep = vals$sep,
-                                        quote = vals$quote,
-                                        dec = vals$dec,
-                                        na.strings = vals$na.strings,
-                                        nrows = 6, ## as.integer(vals$nrows),
-                                        skip = vals$skip,
-                                        comment.char = vals$comment.char,
-                                        encoding = vals$encoding),
-                             silent = TRUE)
-                     if (inherits(df, "try-error"))
-                     {
-                         if (!is.null(preview.env$dataview))
-                             qclose(preview.env$dataview)
-                         if (!is.null(preview.env$importbutton))
-                             qclose(preview.env$importbutton)
-                         flines <- paste(readLines(vals$file, n = 6), collapse = "\n")
-                         preview.env$dataview <-
-                             qlabel(sprintf("Error with current settings: \n%s\n\nContents preview: \n%s",
-                                            df, flines))
-                         qaddWidgetToLayout(x$layout, preview.env$dataview, 2, 1)
-                         qsetText(x$preview.button, "Preview")
-                     }
-                     else 
-                     {
-                         if (!is.null(preview.env$dataview))
-                             qclose(preview.env$dataview)
-                         if (!is.null(preview.env$importbutton))
-                             qclose(preview.env$importbutton)
-                         preview.env$dataview <- qdataview(df)
-                         qaddWidgetToLayout(x$layout, preview.env$dataview, 2, 1)
-                         qsetText(x$preview.button, "Update preview")
-                         preview.env$importbutton <- qpushButton("Import")
-                         qaddWidgetToLayout(x$layout, preview.env$importbutton, 3, 1)
-                         preview.env$import.handler <- 
-                             qconnect(preview.env$importbutton,
-                                      signal = "clicked",
-                                      user.data = preview.env,
-                                      handler = function(x) {
-                                          x$done <- TRUE
-                                      })
-                     }
-                 })
+    qconnect(rto$preview,
+             signal = "clicked",
+             user.data = list(layout = l, args = rto$wlist, preview.button = rto$preview, preview.env = preview.env),
+             handler = function(x) {
+                 vals <- lapply(x$args, get.field.value)
+                 ## str(vals)
+                 df <-
+                     try(read.table(vals$file, 
+                                    header = vals$header,
+                                    sep = vals$sep,
+                                    quote = vals$quote,
+                                    dec = vals$dec,
+                                    na.strings = vals$na.strings,
+                                    nrows = 6, ## as.integer(vals$nrows),
+                                    skip = vals$skip,
+                                    comment.char = vals$comment.char,
+                                    encoding = vals$encoding),
+                         silent = TRUE)
+                 if (inherits(df, "try-error"))
+                 {
+                     if (!is.null(preview.env$dataview))
+                         qclose(preview.env$dataview)
+                     if (!is.null(preview.env$importbutton))
+                         qclose(preview.env$importbutton)
+                     flines <- paste(readLines(vals$file, n = 6), collapse = "\n")
+                     preview.env$dataview <-
+                         qlabel(sprintf("Error with current settings: \n%s\n\nContents preview: \n%s",
+                                        df, flines))
+                     qaddWidgetToLayout(x$layout, preview.env$dataview, 2, 1)
+                     qsetText(x$preview.button, "Preview")
+                 }
+                 else 
+                 {
+                     if (!is.null(preview.env$dataview))
+                         qclose(preview.env$dataview)
+                     if (!is.null(preview.env$importbutton))
+                         qclose(preview.env$importbutton)
+                     preview.env$dataview <- qdataview(df)
+                     qaddWidgetToLayout(x$layout, preview.env$dataview, 2, 1)
+                     qsetText(x$preview.button, "Update preview")
+                     preview.env$importbutton <- qpushButton("Import")
+                     qaddWidgetToLayout(x$layout, preview.env$importbutton, 3, 1)
+                     qconnect(preview.env$importbutton,
+                              signal = "clicked",
+                              user.data = preview.env,
+                              handler = function(x) {
+                                  x$done <- TRUE
+                              })
+                 }
+             })
     qshow(container)
     while (!preview.env$done) { Sys.sleep(0.1) }
     vals <- lapply(rto$wlist, get.field.value)
