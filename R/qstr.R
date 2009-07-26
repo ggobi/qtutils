@@ -67,8 +67,9 @@ qstr.function <- function(x, ...)
 
 qstr.listOrEnv <- function(x, ...)
 {
+    isList <- is.list(x)
     objs <- 
-        if (is.list(x))
+        if (isList)
         {
             if (is.null(names(x)))
                 names(x) <- as.character(seq_along(x))
@@ -83,14 +84,6 @@ qstr.listOrEnv <- function(x, ...)
     qsetContentsMargins(l, 0, 0, 0, 0)
     qsetSpacing(l, 0L)
     qsetLayout(container, l)
-
-##     if (FALSE) ## table
-##     {
-##         df <- data.frame(objects = I(objs))
-##         wlist <- qdataview(df)
-##     }
-##     else
-
     wlist <- qlistWidget(objs)
     for (i in seq_along(objs))
     {
@@ -103,7 +96,17 @@ qstr.listOrEnv <- function(x, ...)
 
     qsetExpanding(wlist, horizontal = FALSE)
     ## qsetContentsMargins(wlist, 0, 0, 0, 0)
-    qaddWidgetToLayout(l, wlist, 1, 1)
+    if (isList)
+    {
+        qaddWidgetToLayout(l, wlist, 1, 1, 2, 1)
+    }
+    else 
+    {
+        wrepl <- qrepl(x)
+        qsetExpanding(wrepl, horizontal = FALSE)
+        qaddWidgetToLayout(l, wlist, 1, 1)
+        qaddWidgetToLayout(l, wrepl, 2, 1)
+    }
     sub.env <- new.env(parent = emptyenv())
     sub.env$preview <- NULL
     sub.env$objects <- objs
@@ -117,7 +120,7 @@ qstr.listOrEnv <- function(x, ...)
         new.preview <- qstr(u$x[[obj]])
         qaddWidgetToLayout(u$sub.env$layout,
                            new.preview,
-                           1, 2)
+                           1, 2, 2, 1)
         if (!is.null(u$sub.env$preview))
             qclose(u$sub.env$preview)
         u$sub.env$preview <- new.preview

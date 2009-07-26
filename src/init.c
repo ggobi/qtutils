@@ -14,6 +14,7 @@ SEXP qt_qgetInteger(SEXP title, SEXP label, SEXP value, SEXP minValue, SEXP maxV
 SEXP qt_qgetText(SEXP title, SEXP label, SEXP text, SEXP parent);
 
 SEXP qt_qeditor(SEXP file, SEXP readonly, SEXP richtext, SEXP rsyntax);
+SEXP qt_qselectedText_QTextEdit(SEXP x);
 
 
 /* from dataview.cpp */
@@ -53,6 +54,7 @@ static R_CallMethodDef CallEntries[] = {
     CALLDEF(qt_qgetInteger, 7),
     CALLDEF(qt_qgetText, 4),
     CALLDEF(qt_qeditor, 4),
+    CALLDEF(qt_qselectedText_QTextEdit, 1),
 
     CALLDEF(qt_qtableWidget, 2),
     CALLDEF(qt_qisSortingEnabled, 1),

@@ -13,7 +13,14 @@ qeditor <-
           as.integer(rsyntax)[1])
 }
 
+qselectedText <- function(x, ...) UseMethod("qselectedText")
 
+qselectedText.QTextEdit <- function(x, ...)
+{
+    gsub("\u2029", "\n",
+         .Call(qt_qselectedText_QTextEdit, x),
+         fixed = TRUE)
+}
 
 qpager <-
     function(file,

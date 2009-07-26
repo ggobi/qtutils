@@ -12,6 +12,7 @@
 
 extern "C" {
     SEXP qt_qeditor(SEXP file, SEXP readonly, SEXP richtext, SEXP rsyntax);
+    SEXP qt_qselectedText_QTextEdit(SEXP x);
 }
 
 
@@ -48,6 +49,11 @@ qt_qeditor(SEXP file, SEXP readonly, SEXP richtext, SEXP rsyntax)
     return wrapQWidget(edit);
 }
 
+SEXP
+qt_qselectedText_QTextEdit(SEXP x)
+{
+    return qstring2sexp(unwrapQObject(x, QTextEdit)->textCursor().selectedText());
+}
 
 /*
 
