@@ -6,17 +6,8 @@
 #include <qtbase.h>
 
 extern "C" {
-
-    SEXP qt_qlistWidget(SEXP labels);
-    SEXP qt_qitem(SEXP x, SEXP row);
-    SEXP qt_qaddItem(SEXP x, SEXP labels);
-    SEXP qt_qcurrentRowListWidget(SEXP x);
-    SEXP qt_qsetItemListWidget(SEXP x, SEXP row, SEXP label);
-    SEXP qt_qsetItemToolTip(SEXP x, SEXP row, SEXP label);
-
-
+#include "listview.h"
 }
-
 
 
 SEXP

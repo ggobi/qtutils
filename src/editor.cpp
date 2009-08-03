@@ -11,10 +11,8 @@
 #include <qtbase.h>
 
 extern "C" {
-    SEXP qt_qeditor(SEXP file, SEXP readonly, SEXP richtext, SEXP rsyntax);
-    SEXP qt_qselectedText_QTextEdit(SEXP x);
+#include "editor.h"
 }
-
 
 SEXP
 qt_qeditor(SEXP file, SEXP readonly, SEXP richtext, SEXP rsyntax)
@@ -55,23 +53,18 @@ qt_qselectedText_QTextEdit(SEXP x)
     return qstring2sexp(unwrapQObject(x, QTextEdit)->textCursor().selectedText());
 }
 
-/*
-
 // A wrapper to save contents to a file
 
-SEXP qt_qsaveEditor(SEXP edit, SEXP file)
-{
+// SEXP qt_qsaveEditor(SEXP edit, SEXP file)
+// {
+//     QFile *qfile = new QFile(sexp2qstring(file));
+//     bool status;
+//     if (!qfile->open(QFile::WriteOnly))
+//         return FALSE;
+//     QTextStream ts(qfile);
+//     ts.setCodec(QTextCodec::codecForName("UTF-8"));
+//     ts << unwrapQObject(x, QTextEdit)->document()->toHtml("UTF-8");
+//     unwrapQObject(x, QTextEdit)->document()->setModified(false);
+//     return TRUE;
+//  } 
 
-    QFile *qfile = new QFile(sexp2qstring(file));
-    bool status;
-    if (!qfile->open(QFile::WriteOnly))
-        return FALSE;
-    QTextStream ts(qfile);
-    ts.setCodec(QTextCodec::codecForName("UTF-8"));
-    ts << unwrapQObject(x, QTextEdit)->document()->toHtml("UTF-8");
-    unwrapQObject(x, QTextEdit)->document()->setModified(false);
-    return TRUE;
- } 
-
-
- */

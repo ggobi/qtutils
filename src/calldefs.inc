@@ -1,0 +1,22 @@
+    CALLDEF(qt_qtableWidget, 2), 
+    CALLDEF(qt_qisSortingEnabled, 1), 
+    CALLDEF(qt_qsetSortingEnabled, 2), 
+    CALLDEF(qt_qsetItem, 4), 
+    CALLDEF(qt_qsetCellWidget, 4), 
+    CALLDEF(qt_qresizeColumnsToContents, 2), 
+    CALLDEF(qt_qresizeRowsToContents, 2), 
+    CALLDEF(qt_qsetHeaderLabels, 3), 
+    CALLDEF(qt_qsetDim, 3), 
+    CALLDEF(qt_qcurrentRow, 1), 
+    CALLDEF(qt_qcurrentColumn, 1), 
+ 
+    CALLDEF(qt_qeditor, 4), 
+    CALLDEF(qt_qselectedText_QTextEdit, 1), 
+ 
+    CALLDEF(qt_qlistWidget, 1), 
+    CALLDEF(qt_qitem, 2), 
+    CALLDEF(qt_qaddItem, 2), 
+    CALLDEF(qt_qcurrentRowListWidget, 1), 
+    CALLDEF(qt_qsetItemListWidget, 3), 
+    CALLDEF(qt_qsetItemToolTip, 3), 
+ 

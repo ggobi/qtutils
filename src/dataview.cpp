@@ -6,24 +6,13 @@
 #include <qtbase.h>
 
 extern "C" {
-
-    SEXP qt_qtableWidget(SEXP nrow, SEXP ncol);
-    SEXP qt_qisSortingEnabled(SEXP x);
-    SEXP qt_qsetSortingEnabled(SEXP x, SEXP status);
-    SEXP qt_qsetItem(SEXP x, SEXP row, SEXP col, SEXP s);
-    SEXP qt_qsetCellWidget(SEXP x, SEXP row, SEXP col, SEXP w);
-    SEXP qt_qresizeColumnsToContents(SEXP x, SEXP cols);
-    SEXP qt_qresizeRowsToContents(SEXP x, SEXP rows);
-    SEXP qt_qsetHeaderLabels(SEXP x, SEXP colnames, SEXP rownames);
-    SEXP qt_qsetDim(SEXP x, SEXP nrow, SEXP ncol);
-    SEXP qt_qcurrentRow(SEXP x);
-    SEXP qt_qcurrentColumn(SEXP x);
-
+#include "dataview.h"
 }
 
 
 SEXP
-qt_qtableWidget(SEXP nrow, SEXP ncol)
+qt_qtableWidget(SEXP nrow, SEXP ncol)   
+
 {
     int nr, nc;
     if (nrow == R_NilValue && ncol == R_NilValue)
