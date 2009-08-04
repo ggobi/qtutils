@@ -98,14 +98,14 @@ qstr.listOrEnv <- function(x, ...)
     ## qsetContentsMargins(wlist, 0, 0, 0, 0)
     if (isList)
     {
-        qaddWidgetToLayout(l, wlist, 1, 1, 2, 1)
+        qaddWidget(l, wlist, 1, 1, 2, 1)
     }
     else 
     {
         wrepl <- qrepl(x)
         qsetExpanding(wrepl, horizontal = FALSE)
-        qaddWidgetToLayout(l, wlist, 1, 1)
-        qaddWidgetToLayout(l, wrepl, 2, 1)
+        qaddWidget(l, wlist, 1, 1)
+        qaddWidget(l, wrepl, 2, 1)
     }
     sub.env <- new.env(parent = emptyenv())
     sub.env$preview <- NULL
@@ -118,9 +118,9 @@ qstr.listOrEnv <- function(x, ...)
         i <- qcurrentRow(u$sub.env$wlist)
         obj <- u$sub.env$objects[i]
         new.preview <- qstr(u$x[[obj]])
-        qaddWidgetToLayout(u$sub.env$layout,
-                           new.preview,
-                           1, 2, 2, 1)
+        qaddWidget(u$sub.env$layout,
+                   new.preview,
+                   1, 2, 2, 1)
         if (!is.null(u$sub.env$preview))
             qclose(u$sub.env$preview)
         u$sub.env$preview <- new.preview

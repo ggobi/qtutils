@@ -11,8 +11,8 @@ file.chooser <- function()
     file.loc <- qlineEdit()
     file.button <- qpushButton("Choose")
     qsetLayout(container, l)
-    qaddWidgetToLayout(l, file.loc, 1, 1)
-    qaddWidgetToLayout(l, file.button, 1, 2)
+    qaddWidget(l, file.loc, 1, 1)
+    qaddWidget(l, file.button, 1, 2)
     ans <-
         list(container = container,
              tfield = file.loc,
@@ -36,8 +36,8 @@ text.field <- function(label, initial = "")
     tlab <- qlabel(label)
     tfield <- qlineEdit(initial)
     qsetLayout(container, l)
-    qaddWidgetToLayout(l, tlab, 1, 1)
-    qaddWidgetToLayout(l, tfield, 1, 2)
+    qaddWidget(l, tlab, 1, 1)
+    qaddWidget(l, tfield, 1, 2)
     ans <-
         list(container = container,
              tlab = tlab, tfield = tfield)
@@ -53,7 +53,7 @@ checkbox.field <- function(label, initial = FALSE)
     cbox <- qcheckBox(label)
     qsetChecked(cbox, initial)
     qsetLayout(container, l)
-    qaddWidgetToLayout(l, cbox, 1, 1)
+    qaddWidget(l, cbox, 1, 1)
     ans <-
         list(container = container,
              cbox = cbox)
@@ -103,19 +103,19 @@ read.table.options <- function()
     qsetContentsMargins(l, 0, 0, 0, 0)
     qsetSpacing(l, 1L)
     qsetLayout(container, l)
-    qaddWidgetToLayout(l, wlist$file$container, 1, 1, 1, 2)
-    qaddWidgetToLayout(l, wlist$sep$container, 2, 1)
-    qaddWidgetToLayout(l, wlist$quote$container, 2, 2)
-    qaddWidgetToLayout(l, wlist$na.strings$container, 3, 1)
-    qaddWidgetToLayout(l, wlist$comment.char$container, 3, 2)
-    ## qaddWidgetToLayout(l, wlist$header, 4, 1)
-    qaddWidgetToLayout(l, wlist$header$container, 4, 1)
-    qaddWidgetToLayout(l, wlist$dec$container, 4, 2)
-    qaddWidgetToLayout(l, wlist$nrows$container, 5, 1)
-    qaddWidgetToLayout(l, wlist$skip$container, 5, 2)
-    qaddWidgetToLayout(l, wlist$encoding$container, 6, 1)
+    qaddWidget(l, wlist$file$container, 1, 1, 1, 2)
+    qaddWidget(l, wlist$sep$container, 2, 1)
+    qaddWidget(l, wlist$quote$container, 2, 2)
+    qaddWidget(l, wlist$na.strings$container, 3, 1)
+    qaddWidget(l, wlist$comment.char$container, 3, 2)
+    ## qaddWidget(l, wlist$header, 4, 1)
+    qaddWidget(l, wlist$header$container, 4, 1)
+    qaddWidget(l, wlist$dec$container, 4, 2)
+    qaddWidget(l, wlist$nrows$container, 5, 1)
+    qaddWidget(l, wlist$skip$container, 5, 2)
+    qaddWidget(l, wlist$encoding$container, 6, 1)
     preview.button <- qpushButton("Preview")
-    qaddWidgetToLayout(l, preview.button, 7, 2)
+    qaddWidget(l, preview.button, 7, 2)
     list(container = container, wlist = wlist,
          preview = preview.button)
 }
@@ -132,7 +132,7 @@ data.import <- function(file = "")
     preview.env$dataview <- NULL
     preview.env$importbutton <- NULL
     preview.env$done <- FALSE
-    qaddWidgetToLayout(l, rto$container, 1, 1)
+    qaddWidget(l, rto$container, 1, 1)
     qconnect(rto$preview,
              signal = "clicked",
              user.data = list(layout = l, args = rto$wlist, preview.button = rto$preview, preview.env = preview.env),
@@ -161,7 +161,7 @@ data.import <- function(file = "")
                      preview.env$dataview <-
                          qlabel(sprintf("Error with current settings: \n%s\n\nContents preview: \n%s",
                                         df, flines))
-                     qaddWidgetToLayout(x$layout, preview.env$dataview, 2, 1)
+                     qaddWidget(x$layout, preview.env$dataview, 2, 1)
                      qsetText(x$preview.button, "Preview")
                  }
                  else 
@@ -171,10 +171,10 @@ data.import <- function(file = "")
                      if (!is.null(preview.env$importbutton))
                          qclose(preview.env$importbutton)
                      preview.env$dataview <- qdataview(df)
-                     qaddWidgetToLayout(x$layout, preview.env$dataview, 2, 1)
+                     qaddWidget(x$layout, preview.env$dataview, 2, 1)
                      qsetText(x$preview.button, "Update preview")
                      preview.env$importbutton <- qpushButton("Import")
-                     qaddWidgetToLayout(x$layout, preview.env$importbutton, 3, 1)
+                     qaddWidget(x$layout, preview.env$importbutton, 3, 1)
                      qconnect(preview.env$importbutton,
                               signal = "clicked",
                               user.data = preview.env,
