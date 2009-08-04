@@ -51,7 +51,7 @@ checkbox.field <- function(label, initial = FALSE)
     l <- qlayout(NULL)
     qsetContentsMargins(l, 0, 0, 0, 0)
     cbox <- qcheckBox(label)
-    qsetChecked(cbox, initial)
+    cbox$checked <- initial
     qsetLayout(container, l)
     qaddWidget(l, cbox, 1, 1)
     ans <-
