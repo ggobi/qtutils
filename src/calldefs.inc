@@ -20,3 +20,7 @@
     CALLDEF(qt_qsetItemListWidget, 3),
     CALLDEF(qt_qsetItemToolTip, 3),
 
+    CALLDEF(qt_qtextEdit, 0),
+    CALLDEF(qt_qdocument_QTextEdit, 1),
+    CALLDEF(qt_qappend_QTextEdit, 2),
+

@@ -16,6 +16,7 @@ SEXP qt_qgetText(SEXP title, SEXP label, SEXP text, SEXP parent);
 #include "editor.h"
 #include "dataview.h"
 #include "listview.h"
+#include "textedit.h"
 
 void R_init_qtutils(DllInfo *dll);
 

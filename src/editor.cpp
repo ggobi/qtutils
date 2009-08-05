@@ -1,7 +1,6 @@
 
 #include <QTextStream>
 #include <QTextEdit>
-#include <QTextBrowser>
 #include <QFileInfo>
 #include <QFile>
 #include <QTextCursor>
@@ -52,6 +51,10 @@ qt_qselectedText_QTextEdit(SEXP x)
 {
     return qstring2sexp(unwrapQObject(x, QTextEdit)->textCursor().selectedText());
 }
+
+
+
+
 
 // A wrapper to save contents to a file
 

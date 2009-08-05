@@ -7,7 +7,7 @@ useDynLib(qtutils, .registration = TRUE)
 export(qfile.choose, qdir.choose, qgetColor,
        qgetDouble, qgetInteger, qgetText)
 
-export(qexport, qhelp, qeditor, qselectedText, qrepl)
+export(qexport, qhelp, qeditor, qselectedText) #, qrepl)
 
 S3method(qselectedText, QTextEdit)
 
@@ -15,7 +15,8 @@ S3method(qexport, QWidget)
 S3method(qexport, QGraphicsView)
 
 
-export(qtableWidget, qisSortingEnabled, qsetSortingEnabled, qsetItem,
+export(qtableWidget, qisSortingEnabled,
+       qsetSortingEnabled, qsetItem,
        qsetCellWidget, qresizeColumnsToContents,
        qresizeRowsToContents, qsetHeaderLabels, qsetDim,
        qcurrentRow, qcurrentColumn)
@@ -39,9 +40,13 @@ S3method(qdataview, table)
 S3method(qdataview, array)
 S3method(qdataview, data.frame)
 
-
-
 export(data.import, data.browse, qpager)
+
+export(qtextEdit, qdocument, qappend)
+S3method(qdocument, QTextEdit)
+S3method(qappend, QTextEdit)
+
+
 
 
 ## Procedure to add new wrapper functions:
