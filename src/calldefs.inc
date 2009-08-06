@@ -23,4 +23,6 @@
     CALLDEF(qt_qtextEdit, 0),
     CALLDEF(qt_qdocument_QTextEdit, 1),
     CALLDEF(qt_qappend_QTextEdit, 2),
+    CALLDEF(qt_qsetTextColor_QTextEdit, 2),
+    CALLDEF(qt_qsetCurrentFont_QTextEdit, 2),
 

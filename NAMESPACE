@@ -7,7 +7,7 @@ useDynLib(qtutils, .registration = TRUE)
 export(qfile.choose, qdir.choose, qgetColor,
        qgetDouble, qgetInteger, qgetText)
 
-export(qexport, qhelp, qeditor, qselectedText) #, qrepl)
+export(qexport, qhelp, qeditor, qselectedText, qrepl)
 
 S3method(qselectedText, QTextEdit)
 
@@ -42,9 +42,11 @@ S3method(qdataview, data.frame)
 
 export(data.import, data.browse, qpager)
 
-export(qtextEdit, qdocument, qappend)
+export(qtextEdit, qdocument, qappend, qsetTextColor, qsetCurrentFont) 
 S3method(qdocument, QTextEdit)
 S3method(qappend, QTextEdit)
+S3method(qsetTextColor, QTextEdit)
+S3method(qsetCurrentFont, QTextEdit)
 
 
 

@@ -4,6 +4,8 @@
 SEXP qt_qtextEdit();
 SEXP qt_qdocument_QTextEdit(SEXP);
 SEXP qt_qappend_QTextEdit(SEXP,SEXP);
+SEXP qt_qsetTextColor_QTextEdit(SEXP,SEXP);
+SEXP qt_qsetCurrentFont_QTextEdit(SEXP,SEXP);
 
 #endif
 
