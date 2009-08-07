@@ -77,13 +77,17 @@ qstr.listOrEnv <- function(x, ...)
         }
         else
             ls(x, all.names = TRUE)
-    container <- qwidget()
-    qsetExpanding(container, horizontal = TRUE)
+    container <- qsplitter(horizontal = TRUE)
+    container$opaqueResize <- FALSE
+
+    ## container <- qwidget()
+    ## qsetExpanding(container, horizontal = TRUE)
     ## qsetContentsMargins(container, 0, 0, 0, 0)
-    l <- qlayout(NULL)
-    qsetContentsMargins(l, 0, 0, 0, 0)
-    qsetSpacing(l, 0L)
-    qsetLayout(container, l)
+    ## l <- qlayout(NULL)
+    ## qsetContentsMargins(l, 0, 0, 0, 0)
+    ## qsetSpacing(l, 0L)
+    ## qsetLayout(container, l)
+
     wlist <- qlistWidget(objs)
     for (i in seq_along(objs))
     {
@@ -94,36 +98,43 @@ qstr.listOrEnv <- function(x, ...)
                                 mode(x[[ objs[i] ]])))
     }
 
-    qsetExpanding(wlist, horizontal = FALSE)
     ## qsetContentsMargins(wlist, 0, 0, 0, 0)
-    if (isList)
-    {
-        qaddWidget(l, wlist, 1, 1, 2, 1)
-    }
-    else 
-    {
-        wrepl <- qrepl(x)
-        qsetExpanding(wrepl, horizontal = FALSE)
-        qaddWidget(l, wlist, 1, 1)
-        qaddWidget(l, wrepl, 2, 1)
-    }
+##     if (isList)
+##     {
+##         qaddWidget(l, wlist, 1, 1, 2, 1)
+##     }
+##     else 
+##     {
+##         wrepl <- qrepl(x)
+##         qsetExpanding(wrepl, horizontal = FALSE)
+##         qaddWidget(l, wlist, 1, 1)
+##         qaddWidget(l, wrepl, 2, 1)
+##     }
+
+    qaddWidget(container, wlist)
     sub.env <- new.env(parent = emptyenv())
     sub.env$preview <- NULL
     sub.env$objects <- objs
     sub.env$wlist <- wlist
-    sub.env$layout <- l
+    sub.env$container <- container
 
     user.data <- list(x = x, sub.env = sub.env)
     handleSelection <- function(u) {
         i <- qcurrentRow(u$sub.env$wlist)
         obj <- u$sub.env$objects[i]
         new.preview <- qstr(u$x[[obj]])
-        qaddWidget(u$sub.env$layout,
-                   new.preview,
-                   1, 2, 2, 1)
+##         qaddWidget(u$sub.env$layout,
+##                    new.preview,
+##                    1, 2, 2, 1)
         if (!is.null(u$sub.env$preview))
             qclose(u$sub.env$preview)
+        qsetExpanding(u$sub.env$wlist, horizontal = FALSE)
+        qsetExpanding(new.preview, horizontal = TRUE)
+        qaddWidget(u$sub.env$container, new.preview)
+        qsetStretchFactor(u$sub.env$container, 0L, 0L)
+        qsetStretchFactor(u$sub.env$container, 1L, 10L)
         u$sub.env$preview <- new.preview
+        qupdate(u$sub.env$container)
     }
 
 ##     qconnect(wlist,
@@ -131,11 +142,11 @@ qstr.listOrEnv <- function(x, ...)
 ##              handler = handleSelection,
 ##              ## which = "cellClicked_int_int")
 ##              which = "itemClicked_qlistwidgetitem")
-    attr(container, "activation.handler") <- 
-        qconnect(wlist,
-                 signal = "itemActivated",
-                 user.data = user.data,
-                 handler = handleSelection)    
+    ## attr(container, "activation.handler") <- 
+    qconnect(wlist,
+             signal = "itemActivated",
+             user.data = user.data,
+             handler = handleSelection)    
     container
 }
 

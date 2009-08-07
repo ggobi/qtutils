@@ -54,18 +54,18 @@ tryParseEval <- function(text, env)
 
 qrepl <- function(env = .GlobalEnv)
 {
-    container <- qwidget()
-    ll <- qlayout()
-    qsetLayout(container, ll)
+    container <- qsplitter(horizontal = FALSE)
     ined <- qeditor(tempfile(), rsyntax = TRUE, richtext = FALSE)
-    qsetCurrentFont(ined, qfont("monospace"))
+    ## ined$setCurrentFont(qfont("monospace"))
     outed <- qtextEdit()
-    qsetCurrentFont(outed, qfont("monospace"))
+    outed$setCurrentFont(qfont("monospace"))
     ## outed$font <- qfont()
     outed$readOnly <- TRUE
     qsetExpanding(ined, vertical = FALSE)
-    ll[1, 1] <- outed
-    ll[2, 1] <- ined
+    qaddWidget(container, outed)
+    qaddWidget(container, ined)
+    qsetStretchFactor(container, 0L, 10L)
+    qsetStretchFactor(container, 1L, 0L)
     ined$plainText <- "\n## Type code, press Ctrl+Return to evaluate\n\n"
     qsetContextMenuPolicy(ined, "actions")
     runAct <- qaction(desc = "Execute", shortcut = "Ctrl+Return", parent = ined)
@@ -76,18 +76,18 @@ qrepl <- function(env = .GlobalEnv)
                  ## str(pe)
                  if (is(pe, "try-error"))
                  {
-                     qappend(x$ined, paste("## ", as.character(pe), collapse = "\n"))
+                     x$ined$append(paste("## ", as.character(pe), collapse = "\n"))
                  }
                  else
                  {
-                     x$ined$clear()
+                     x$ined$selectAll()
                      for (i in seq_along(pe))
                      {
-                         qsetTextColor(x$outed, "red")
-                         qappend(x$outed, pe[[i]]$ein)
-                         qsetTextColor(x$outed, "blue")
-                         if (!is.null(pe[[i]]$eout)) qappend(x$outed, pe[[i]]$eout)
-                         qsetTextColor(x$outed, "grey")
+                         x$outed$setTextColor(qcolor("red"))
+                         x$outed$append(pe[[i]]$ein)
+                         x$outed$setTextColor(qcolor("blue"))
+                         if (!is.null(pe[[i]]$eout)) x$outed$append(pe[[i]]$eout)
+                         x$outed$setTextColor(qcolor("grey"))
                      }
                  }
              },
