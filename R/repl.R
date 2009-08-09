@@ -38,64 +38,124 @@ tryParseEval <- function(text, env)
     for (i in seq_along(exprs))
     {
         ein <- esrc[[i]]
-        env$.expr <- exprs[[i]]
-        evis <- try(evalq(withVisible(eval(.expr)),
-                          envir = env),
-                    silent = TRUE)
-        if (inherits(evis, "try-error")) return(evis)
-        eout <- if (evis$visible) capture.output(evis$value) else NULL
+        .GlobalEnv$.qexpr <- exprs[[i]] # env$.expr <- exprs[[i]]
+        output <-
+            capture.output(evis <- try(evalq(withVisible(eval(.GlobalEnv$.qexpr)),
+                                             envir = env),
+                                        silent = TRUE))
+        ##eout <- evis
         ans[[i]] <- list(ein = paste("> ", paste(ein, collapse = "\n+ "), sep = ""),
-                         eout = if (is.null(eout)) NULL else paste(eout, collapse = "\n"))
+                         evis = evis,
+                         output = output)
     }
     ans
 }
 
 
 
-qrepl <- function(env = .GlobalEnv)
+## tryParseEval.old <- function(text, env)
+## {
+##     exprs <- try(parse(text = text), silent = TRUE)
+##     esrc <- lapply(attr(exprs, "srcref"), as.character)
+##     if (is(exprs, "try-error")) return (exprs)
+##     ans <- vector(mode = "list", length = length(exprs))
+##     for (i in seq_along(exprs))
+##     {
+##         ein <- esrc[[i]]
+##         .GlobalEnv$.qexpr <-  # env$.expr <- exprs[[i]]
+##         evis <- try(capture.output(eval(exprs[[i]], envir = env)),
+##                     silent = TRUE)
+##         eout <- 
+##             if (inherits(evis, "try-error")) strsplit(as.character(evis), "\n", fixed = TRUE)[[1]]
+##             else if (length(evis) > 0) evis
+##             else NULL
+##         ans[[i]] <- list(ein = paste("> ", paste(ein, collapse = "\n+ "), sep = ""),
+##                          eout = if (is.null(eout)) NULL else paste(eout, collapse = "\n"))
+##     }
+##     ans
+## }
+
+
+
+qrepl <- function(env = .GlobalEnv,
+                  font = qfont("monospace"),
+                  incolor = qcolor("red"),
+                  outcolor = qcolor("blue"),
+                  errorcolor = qcolor("black"),
+                  html.preferred = TRUE)
 {
-    container <- qsplitter(horizontal = FALSE)
-    ined <- qeditor(tempfile(), rsyntax = TRUE, richtext = FALSE)
-    ## ined$setCurrentFont(qfont("monospace"))
+    ## input
+    ined <- qeditor(tempfile(), rsyntax = TRUE, richtext = TRUE)
+    ined$setCurrentFont(font)
+    ## output
     outed <- qtextEdit()
-    outed$setCurrentFont(qfont("monospace"))
-    ## outed$font <- qfont()
     outed$readOnly <- TRUE
     qsetExpanding(ined, vertical = FALSE)
+    qsetExpanding(outed, vertical = TRUE)
+    ## container
+    container <- qsplitter(horizontal = FALSE)
     qaddWidget(container, outed)
     qaddWidget(container, ined)
     qsetStretchFactor(container, 0L, 10L)
     qsetStretchFactor(container, 1L, 0L)
-    ined$plainText <- "\n## Type code, press Ctrl+Return to evaluate\n\n"
+    ined$append("## Type code, press Ctrl+Return to evaluate\n")
+    ## add action to execute code
     qsetContextMenuPolicy(ined, "actions")
     runAct <- qaction(desc = "Execute", shortcut = "Ctrl+Return", parent = ined)
+    runHandler = function(x, ...) {
+        pe <- tryParseEval(text = ined$plainText, env = env)
+        if (is(pe, "try-error"))
+        {
+            ined$append(paste("## ",
+                              strsplit(as.character(pe), "\n", fixed = TRUE)[[1]],
+                              collapse = "\n"))
+        }
+        else
+        {
+            ined$selectAll()
+            ined$setCurrentFont(font)
+            for (i in seq_along(pe))
+            {
+                ein <- pe[[i]]$ein
+                output <- pe[[i]]$output
+                evis <- pe[[i]]$evis
+                ## input
+                outed$setCurrentFont(font)
+                outed$setTextColor(incolor)
+                outed$append(ein)
+                ## output
+                outed$setTextColor(outcolor)
+                ## any captured output (by product of evaluation)
+                if (length(output))
+                    outed$append(paste(output, collapse = "\n"))
+                ## return value of evaluation (may need to be printed)
+                if (inherits(evis, "try-error"))
+                {
+                    outed$setTextColor(errorcolor)
+                    outed$append(as.character(evis))
+                }
+                else if (evis$visible)
+                {
+                    if (html.preferred &&
+                        !inherits(try(xtab <- xtable(evis$value), silent = TRUE),
+                                  "try-error"))
+                    {
+                        html.output <- capture.output(print(xtab, type = "html"))
+                        outed$insertHtml(paste(html.output, collapse = "\n"))
+                    }
+                    else
+                    {
+                        text.output <- capture.output(evis$value)
+                        outed$append(paste(text.output, collapse = "\n"))
+                    }
+                }
+            }
+        }
+    }
     runAct$shortcutContext <- 0 ## only triggered when widget has focus
-    qconnect(runAct, signal = "triggered",
-             handler = function(x, ...) {
-                 pe <- tryParseEval(text = x$ined$plainText, env = env)
-                 ## str(pe)
-                 if (is(pe, "try-error"))
-                 {
-                     x$ined$append(paste("## ", as.character(pe), collapse = "\n"))
-                 }
-                 else
-                 {
-                     x$ined$selectAll()
-                     for (i in seq_along(pe))
-                     {
-                         x$outed$setTextColor(qcolor("red"))
-                         x$outed$append(pe[[i]]$ein)
-                         x$outed$setTextColor(qcolor("blue"))
-                         if (!is.null(pe[[i]]$eout)) x$outed$append(pe[[i]]$eout)
-                         x$outed$setTextColor(qcolor("grey"))
-                     }
-                 }
-             },
-             user.data = list(ined = ined, outed = outed))
+    qconnect(runAct, signal = "triggered", handler = runHandler)
+    ## user.data = list(ined = ined, outed = outed))
     qaddAction(ined, runAct)
     container
 }
-
-
-
 

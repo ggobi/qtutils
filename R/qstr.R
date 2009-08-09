@@ -13,6 +13,7 @@ qstr.default <- function(x, ...)
     ## ostr <- capture.output(str(x, ...))
     ostr <- capture.output(print(x, ...))
     cat(paste(ostr, collapse = "\n"), file = temp)
+    ## FIXME: no need to write out file
     w <- qeditor(temp, readonly = TRUE, rsyntax = FALSE)
     unlink(temp)
     w
@@ -91,12 +92,26 @@ qstr.listOrEnv <- function(x, ...)
     wlist <- qlistWidget(objs)
     for (i in seq_along(objs))
     {
+        if (!isList && bindingIsActive(objs[i], x))
+        {
+            obj.class <- obj.mode <- "Active binding"
+        }
+        else
+        {
+            obj.class <- class(x[[ objs[i] ]])
+            obj.mode <- mode(x[[ objs[i] ]])
+        }
         qsetItemToolTip(wlist, i,
                         sprintf("<html>%s<br><strong>Class: </strong>%s<br><strong>Mode: </strong>%s</html>",
                                 objs[i],
-                                paste(class(x[[ objs[i] ]]), collapse = ","),
-                                mode(x[[ objs[i] ]])))
+                                paste(obj.class, collapse = ","),
+                                obj.mode))
     }
+    preview.container <- qwidget()
+    preview.layout <- qlayout()
+    qsetContentsMargins(preview.layout, 0, 0, 0, 0)
+    qsetSpacing(preview.layout, 0L)
+    qsetLayout(preview.container, preview.layout)
 
     ## qsetContentsMargins(wlist, 0, 0, 0, 0)
 ##     if (isList)
@@ -112,29 +127,29 @@ qstr.listOrEnv <- function(x, ...)
 ##     }
 
     qaddWidget(container, wlist)
+    qaddWidget(container, preview.container)
+    qsetExpanding(wlist, horizontal = FALSE)
+    qsetExpanding(preview.container, horizontal = TRUE)
+    qsetStretchFactor(container, 0L, 0L)
+    qsetStretchFactor(container, 1L, 10L)
+
     sub.env <- new.env(parent = emptyenv())
     sub.env$preview <- NULL
     sub.env$objects <- objs
     sub.env$wlist <- wlist
-    sub.env$container <- container
+    sub.env$preview.layout <- preview.layout
+    sub.env$preview.container <- preview.container
 
     user.data <- list(x = x, sub.env = sub.env)
-    handleSelection <- function(u) {
+    handleSelection <- function(u)
+    {
         i <- qcurrentRow(u$sub.env$wlist)
         obj <- u$sub.env$objects[i]
         new.preview <- qstr(u$x[[obj]])
-##         qaddWidget(u$sub.env$layout,
-##                    new.preview,
-##                    1, 2, 2, 1)
         if (!is.null(u$sub.env$preview))
             qclose(u$sub.env$preview)
-        qsetExpanding(u$sub.env$wlist, horizontal = FALSE)
-        qsetExpanding(new.preview, horizontal = TRUE)
-        qaddWidget(u$sub.env$container, new.preview)
-        qsetStretchFactor(u$sub.env$container, 0L, 0L)
-        qsetStretchFactor(u$sub.env$container, 1L, 10L)
+        u$sub.env$preview.layout[1,1] <- new.preview
         u$sub.env$preview <- new.preview
-        qupdate(u$sub.env$container)
     }
 
 ##     qconnect(wlist,
