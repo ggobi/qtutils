@@ -5,29 +5,17 @@
 ## browser() and recover().
 
 
-## first prototype: have an editor for text, and an associated
-## environment.  Selected text can be evaluated, but the results will
-## be shown in the main console
+## Two editors in a splitter, one for input and one for output.
 
 
-qrepl.old <- function(env = .GlobalEnv)
+
+tryComplete <- function(text, cursor = nchar(text))
 {
-    ed <- qeditor(tempfile())
-    ed$plainText <- "\n## Type code, select and \n## press Ctrl+R to evaluate in \n## this environment\n\n"
-    qsetContextMenuPolicy(ed, "actions")
-    runAct <- qaction(desc = "Execute selection", shortcut = "Ctrl+R", parent = ed)
-    runAct$shortcutContext <- 0 ## only triggered when widget has focus
-    qconnect(runAct, signal = "triggered",
-             handler = function(x, ...) {
-                 .u_tryEval(text = qselectedText(x), env = env)
-             },
-             user.data = ed)
-    qaddAction(ed, runAct)
-    ed
+    utils:::.win32consoleCompletion(linebuffer = text, cursorPosition = cursor,
+                                    check.repeat = TRUE, 
+                                    minlength = -1)
 }
 
-## second attempt: two editors in a layout, one for input and one for
-## output.
 
 tryParseEval <- function(text, env)
 {
@@ -51,38 +39,12 @@ tryParseEval <- function(text, env)
     ans
 }
 
-
-
-## tryParseEval.old <- function(text, env)
-## {
-##     exprs <- try(parse(text = text), silent = TRUE)
-##     esrc <- lapply(attr(exprs, "srcref"), as.character)
-##     if (is(exprs, "try-error")) return (exprs)
-##     ans <- vector(mode = "list", length = length(exprs))
-##     for (i in seq_along(exprs))
-##     {
-##         ein <- esrc[[i]]
-##         .GlobalEnv$.qexpr <-  # env$.expr <- exprs[[i]]
-##         evis <- try(capture.output(eval(exprs[[i]], envir = env)),
-##                     silent = TRUE)
-##         eout <- 
-##             if (inherits(evis, "try-error")) strsplit(as.character(evis), "\n", fixed = TRUE)[[1]]
-##             else if (length(evis) > 0) evis
-##             else NULL
-##         ans[[i]] <- list(ein = paste("> ", paste(ein, collapse = "\n+ "), sep = ""),
-##                          eout = if (is.null(eout)) NULL else paste(eout, collapse = "\n"))
-##     }
-##     ans
-## }
-
-
-
 qrepl <- function(env = .GlobalEnv,
                   font = qfont("monospace"),
                   incolor = qcolor("red"),
                   outcolor = qcolor("blue"),
                   errorcolor = qcolor("black"),
-                  html.preferred = TRUE)
+                  html.preferred = require(xtable))
 {
     ## input
     ined <- qeditor(tempfile(), rsyntax = TRUE, richtext = TRUE)
@@ -92,26 +54,30 @@ qrepl <- function(env = .GlobalEnv,
     outed$readOnly <- TRUE
     qsetExpanding(ined, vertical = FALSE)
     qsetExpanding(outed, vertical = TRUE)
+    ## messages
+    msg <- qlabel("")
+    msg$wordWrap <- TRUE
     ## container
     container <- qsplitter(horizontal = FALSE)
     qaddWidget(container, outed)
     qaddWidget(container, ined)
+    qaddWidget(container, msg)
     qsetStretchFactor(container, 0L, 10L)
     qsetStretchFactor(container, 1L, 0L)
-    ined$append("## Type code, press Ctrl+Return to evaluate\n")
+    qsetStretchFactor(container, 2L, 0L)
+    msg$text <- "Type code, press Ctrl+Return to evaluate"
     ## add action to execute code
     qsetContextMenuPolicy(ined, "actions")
     runAct <- qaction(desc = "Execute", shortcut = "Ctrl+Return", parent = ined)
-    runHandler = function(x, ...) {
+    runHandler = function() {
         pe <- tryParseEval(text = ined$plainText, env = env)
         if (is(pe, "try-error"))
         {
-            ined$append(paste("## ",
-                              strsplit(as.character(pe), "\n", fixed = TRUE)[[1]],
-                              collapse = "\n"))
+            msg$text <- paste(as.character(pe), collapse = "\n")
         }
         else
         {
+            msg$text <- ""
             ined$selectAll()
             ined$setCurrentFont(font)
             for (i in seq_along(pe))
@@ -131,8 +97,10 @@ qrepl <- function(env = .GlobalEnv,
                 ## return value of evaluation (may need to be printed)
                 if (inherits(evis, "try-error"))
                 {
+                    qmoveCursor(outed, "end")
                     outed$setTextColor(errorcolor)
-                    outed$append(as.character(evis))
+                    outed$append(paste(strsplit(as.character(evis), "\n")[[1]],
+                                       collapse = "\n")) # remove final newline
                 }
                 else if (evis$visible)
                 {
@@ -140,7 +108,9 @@ qrepl <- function(env = .GlobalEnv,
                         !inherits(try(xtab <- xtable(evis$value), silent = TRUE),
                                   "try-error"))
                     {
+                        qmoveCursor(outed, "end")
                         html.output <- capture.output(print(xtab, type = "html"))
+                        ## FIXME: need something append-like (add to end)
                         outed$insertHtml(paste(html.output, collapse = "\n"))
                     }
                     else
@@ -150,12 +120,26 @@ qrepl <- function(env = .GlobalEnv,
                     }
                 }
             }
+            qmoveCursor(outed, "end")
         }
     }
     runAct$shortcutContext <- 0 ## only triggered when widget has focus
     qconnect(runAct, signal = "triggered", handler = runHandler)
-    ## user.data = list(ined = ined, outed = outed))
     qaddAction(ined, runAct)
+    ## add action for text-completion
+    compAct <- qaction(desc = "Complete", shortcut = "Ctrl+I", parent = ined)
+    compAct$shortcutContext <- 0 ## only triggered when widget has focus
+    compHandler = function() {
+        comps <- tryComplete(text = ined$plainText, qcursorPosition(ined))
+        ined$insertPlainText(comps$addition)
+        if (length(comps$comps))
+        {
+            msg$text <- paste(comps$comps)
+        }
+    }
+    qconnect(compAct, signal = "triggered", handler = compHandler)
+    qaddAction(ined, compAct)
+    ## return containing splitter
     container
 }
 

@@ -5,6 +5,12 @@ qdocument <- function(x) UseMethod("qdocument")
 
 qappend <- function(x, text) UseMethod("qappend")
 
+qmoveCursor <- function(x, ...) UseMethod("qmoveCursor")
+
+qcursorPosition <- function(x) UseMethod("qcursorPosition")
+
+
+
 qsetTextColor <- function(x, color)
     UseMethod("qsetTextColor")
 
@@ -31,5 +37,31 @@ qsetTextColor.QTextEdit <- function(x, color)
 
 qsetCurrentFont.QTextEdit <- function(x, font)
     .Call(qt_qsetCurrentFont_QTextEdit, x, font)
+
+
+qmoveCursor.QTextEdit <-
+    function(x,
+             operation = c("nomove", "start", "startofline", "startofblock", "startofword", 
+                           "previousblock", "previouscharacter", "previousword", "up", "left", 
+                           "wordleft", "end", "endofline", "endofword", "endofblock", "nextblock", 
+                           "nextcharacter", "nextword", "down", "right", "wordright", "nextcell", 
+                           "previouscell", "nextrow", "previousrow"),
+             select = FALSE, ...)
+{
+    operation <-
+        match.arg(tolower(operation),
+                  c("nomove", "start", "startofline", "startofblock", "startofword", 
+                    "previousblock", "previouscharacter", "previousword", "up", "left", 
+                    "wordleft", "end", "endofline", "endofword", "endofblock", "nextblock", 
+                    "nextcharacter", "nextword", "down", "right", "wordright", "nextcell", 
+                    "previouscell", "nextrow", "previousrow"))
+    .Call(qt_qmoveCursor_QTextEdit, x, operation, as.logical(select))
+}
+
+qcursorPosition.QTextEdit <- function(x)
+{
+    .Call(qt_qcursorPosition_QTextEdit, x)
+}
+
 
 
