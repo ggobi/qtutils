@@ -8,6 +8,7 @@ SEXP qt_qsetTextColor_QTextEdit(SEXP,SEXP);
 SEXP qt_qsetCurrentFont_QTextEdit(SEXP,SEXP);
 SEXP qt_qmoveCursor_QTextEdit(SEXP,SEXP,SEXP);
 SEXP qt_qcursorPosition_QTextEdit(SEXP);
+SEXP qt_qsetCursorPosition_QTextEdit(SEXP,SEXP);
 
 #endif
 

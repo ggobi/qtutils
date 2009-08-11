@@ -46,13 +46,21 @@ qrepl <- function(env = .GlobalEnv,
                   errorcolor = qcolor("black"),
                   html.preferred = require(xtable))
 {
-    ## input
-    ined <- qeditor(tempfile(), rsyntax = TRUE, richtext = TRUE)
-    ined$setCurrentFont(font)
+    ## input1: REPL-like mode, type and execute code
+    ined1 <- qeditor(tempfile(), rsyntax = TRUE, richtext = TRUE)
+    ined1$setCurrentFont(font)
+    ## input2: Editor mode, select and execute code.  input1 text gets appended here
+    ined2 <- qeditor(tempfile(), rsyntax = TRUE, richtext = TRUE)
+    ined2$setCurrentFont(font)
     ## output
     outed <- qtextEdit()
     outed$readOnly <- TRUE
-    qsetExpanding(ined, vertical = FALSE)
+    ## tabbed widget holding the two input editors
+    intab <- qtabWidget()
+    qaddTab(intab, ined1, label = "Input mode")
+    qaddTab(intab, ined2, label = "Edit mode")
+
+    qsetExpanding(intab, vertical = FALSE)
     qsetExpanding(outed, vertical = TRUE)
     ## messages
     msg <- qlabel("")
@@ -60,26 +68,34 @@ qrepl <- function(env = .GlobalEnv,
     ## container
     container <- qsplitter(horizontal = FALSE)
     qaddWidget(container, outed)
-    qaddWidget(container, ined)
+    qaddWidget(container, intab)
     qaddWidget(container, msg)
     qsetStretchFactor(container, 0L, 10L)
     qsetStretchFactor(container, 1L, 0L)
     qsetStretchFactor(container, 2L, 0L)
     msg$text <- "Type code, press Ctrl+Return to evaluate"
     ## add action to execute code
-    qsetContextMenuPolicy(ined, "actions")
-    runAct <- qaction(desc = "Execute", shortcut = "Ctrl+Return", parent = ined)
-    runHandler = function() {
-        pe <- tryParseEval(text = ined$plainText, env = env)
+    qsetContextMenuPolicy(ined1, "actions")
+    qsetContextMenuPolicy(ined2, "actions")
+    ## function to perform code execution
+
+    executeCode <- function(text, mode = c("input", "edit"))
+    {
+        mode <- match.arg(mode)
+        pe <- tryParseEval(text = text, env = env)
         if (is(pe, "try-error"))
         {
-            msg$text <- paste(as.character(pe), collapse = "\n")
+            msg$text <- paste(strsplit(as.character(pe), "\n", fixed = TRUE)[[1]], collapse = "\\n")
         }
         else
         {
             msg$text <- ""
-            ined$selectAll()
-            ined$setCurrentFont(font)
+            if (mode == "input")
+            {
+                ined1$selectAll()
+                ined1$setCurrentFont(font)
+                ined2$append(text)
+            }
             for (i in seq_along(pe))
             {
                 ein <- pe[[i]]$ein
@@ -123,23 +139,103 @@ qrepl <- function(env = .GlobalEnv,
             qmoveCursor(outed, "end")
         }
     }
-    runAct$shortcutContext <- 0 ## only triggered when widget has focus
-    qconnect(runAct, signal = "triggered", handler = runHandler)
-    qaddAction(ined, runAct)
-    ## add action for text-completion
-    compAct <- qaction(desc = "Complete", shortcut = "Ctrl+I", parent = ined)
-    compAct$shortcutContext <- 0 ## only triggered when widget has focus
-    compHandler = function() {
-        comps <- tryComplete(text = ined$plainText, qcursorPosition(ined))
-        ined$insertPlainText(comps$addition)
-        if (length(comps$comps))
+
+    runAct1 <- qaction(desc = "Execute", shortcut = "Ctrl+Return", parent = ined1)
+    runHandler1 <- function() { executeCode(ined1$plainText, mode = "input") }
+    runAct1$shortcutContext <- 0 ## only triggered when widget has focus
+    qconnect(runAct1, signal = "triggered", handler = runHandler1)
+    qaddAction(ined1, runAct1)
+    
+    runAct2 <- qaction(desc = "Execute selection", shortcut = "Ctrl+Return", parent = ined2)
+    runHandler2 <- function()
+    {
+        ## execute if selection exists, else select minimal parseable
+        ## input starting backwords from current line
+        sel <- qselectedText(ined2)
+        if (nzchar(sel))
         {
-            msg$text <- paste(comps$comps)
+            executeCode(sel, mode = "edit")
+            qmoveCursor(ined2, "startofline", select = FALSE)
+            qmoveCursor(ined2, "down", select = FALSE)
+        }
+        else
+        {
+            oldPos <- qcursorPosition(ined2)
+            qmoveCursor(ined2, "endofline", select = FALSE)
+            qmoveCursor(ined2, "startofline", select = TRUE)
+            parseable <- !is(try(parse(text = qselectedText(ined2)), silent = TRUE), "try-error")
+            reached0 <- qcursorPosition(ined2) == 0L
+            while (!parseable && !reached0)
+            {
+                qmoveCursor(ined2, "up", select = TRUE)
+                parseable <- !is(try(parse(text = qselectedText(ined2)), silent = TRUE), "try-error")
+                reached0 <- qcursorPosition(ined2) == 0L
+            }
+            if (!parseable) qsetCursorPosition(ined2, oldPos) ## restore
         }
     }
-    qconnect(compAct, signal = "triggered", handler = compHandler)
-    qaddAction(ined, compAct)
+    runAct2$shortcutContext <- 0 ## only triggered when widget has focus
+    qconnect(runAct2, signal = "triggered", handler = runHandler2)
+    qaddAction(ined2, runAct2)
+    
+    ## add action for text-completion (not yet in edit mode)
+    compAct1 <- qaction(desc = "Complete", shortcut = "Ctrl+I", parent = ined1)
+    compAct1$shortcutContext <- 0 ## only triggered when widget has focus
+    compHandler1 <- function() {
+        comps <- tryComplete(text = ined1$plainText, qcursorPosition(ined1))
+        ined1$insertPlainText(comps$addition)
+        msg$text <-
+            if (nzchar(comps$addition) || any(nzchar(comps$comps))) paste(comps$comps)
+            else "No completions."
+    }
+    qconnect(compAct1, signal = "triggered", handler = compHandler1)
+    qaddAction(ined1, compAct1)
+
+    ## save file in edit mode
+    saveAct <- qaction(desc = "Save As", shortcut = "Ctrl+S", parent = ined2)
+    saveAct$shortcutContext <- 0 ## only triggered when widget has focus
+    saveHandler <- function() {
+        savetext <- ined2$plainText
+        file <- qfile.choose(caption = "Choose output file", filter = "*.R", allow.new = TRUE)
+        if (nzchar(file)) cat(savetext, file = file)
+    }
+    qconnect(saveAct, signal = "triggered", handler = saveHandler)
+    qaddAction(ined2, saveAct)
+
+    ## load file in edit mode
+    saveAct <- qaction(desc = "Append contents from file", shortcut = "Ctrl+O", parent = ined2)
+    saveAct$shortcutContext <- 0 ## only triggered when widget has focus
+    saveHandler <- function() {
+        file <- qfile.choose(caption = "Choose file", filter = "*.R", allow.new = FALSE)
+        if (nzchar(file)) ined2$append(paste(readLines(file), collapse = "\n"))
+    }
+    qconnect(saveAct, signal = "triggered", handler = saveHandler)
+    qaddAction(ined2, saveAct)
+
+
     ## return containing splitter
     container
 }
 
+
+
+## ## text zoom: doesn't wok because font reset during each eval
+## zoominAct1 <- qaction(desc = "Increase text size", shortcut = "Ctrl++", parent = ined1)
+## zoominAct1$shortcutContext <- 0 ## only triggered when widget has focus
+## qconnect(zoominAct1, signal = "triggered", handler = function() ined1$zoomIn())
+## qaddAction(ined1, zoominAct1)
+
+## zoomoutAct1 <- qaction(desc = "Decrease text size", shortcut = "Ctrl+-", parent = ined1)
+## zoomoutAct1$shortcutContext <- 0 ## only triggered when widget has focus
+## qconnect(zoomoutAct1, signal = "triggered", handler = function() ined1$zoomOut())
+## qaddAction(ined1, zoomoutAct1)
+
+## zoominAct2 <- qaction(desc = "Increase text size", shortcut = "Ctrl++", parent = ined2)
+## zoominAct2$shortcutContext <- 0 ## only triggered when widget has focus
+## qconnect(zoominAct2, signal = "triggered", handler = function() ined2$zoomIn())
+## qaddAction(ined2, zoominAct2)
+
+## zoomoutAct2 <- qaction(desc = "Decrease text size", shortcut = "Ctrl+-", parent = ined2)
+## zoomoutAct2$shortcutContext <- 0 ## only triggered when widget has focus
+## qconnect(zoomoutAct2, signal = "triggered", handler = function() ined2$zoomOut())
+## qaddAction(ined2, zoomoutAct2)

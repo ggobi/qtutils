@@ -43,7 +43,7 @@ S3method(qdataview, data.frame)
 export(data.import, data.browse, qpager)
 
 export(qtextEdit, qdocument, qappend, qsetTextColor, qsetCurrentFont,
-       qmoveCursor, qcursorPosition)
+       qmoveCursor, qcursorPosition, qsetCursorPosition)
 
 S3method(qdocument, QTextEdit)
 S3method(qappend, QTextEdit)

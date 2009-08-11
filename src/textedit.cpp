@@ -91,4 +91,12 @@ qt_qcursorPosition_QTextEdit(SEXP x)
     return ScalarInteger(unwrapQObject(x, QTextEdit)->textCursor().position());
 }
 
-
+SEXP
+qt_qsetCursorPosition_QTextEdit(SEXP x, SEXP pos)
+{
+    QTextEdit *te = unwrapQObject(x, QTextEdit);
+    QTextCursor tc = te->textCursor();
+    tc.setPosition(asInteger(pos));
+    te->setTextCursor(tc);
+    return R_NilValue;
+}

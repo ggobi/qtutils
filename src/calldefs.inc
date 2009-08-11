@@ -27,4 +27,5 @@
     CALLDEF(qt_qsetCurrentFont_QTextEdit, 2),
     CALLDEF(qt_qmoveCursor_QTextEdit, 3),
     CALLDEF(qt_qcursorPosition_QTextEdit, 1),
+    CALLDEF(qt_qsetCursorPosition_QTextEdit, 2),
 
