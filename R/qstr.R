@@ -98,7 +98,8 @@ qstr.listOrEnv <- function(x, ...)
         }
         else
         {
-            obj.class <- class(x[[ objs[i] ]])
+            ## obj.class <- class(x[[ objs[i] ]]) ## FIXME: use is()? S3 works?
+            obj.class <- setdiff(is(x[[ objs[i] ]]), "oldClass")
             obj.mode <- mode(x[[ objs[i] ]])
         }
         qsetItemToolTip(wlist, i,
