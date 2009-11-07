@@ -9,7 +9,8 @@ data.browse <-
     colnames(data) <-
         c("Data", "Package", "Description")
     ans <- qdataview(data)
-    qresizeColumnsToContents(ans)
-    qsetSortingEnabled(ans, TRUE)
+    ans$setSortingEnabled(TRUE)
+    ans$resizeColumnsToContents()
+    ans$resize(600, 400)
     ans
 }

@@ -78,7 +78,7 @@ qstr.listOrEnv <- function(x, ...)
         }
         else
             ls(x, all.names = TRUE)
-    container <- qsplitter(horizontal = TRUE)
+    container <- Qt$QSplitter(1L) ## qsplitter(horizontal = TRUE)
     container$opaqueResize <- FALSE
 
     ## container <- qwidget()
@@ -89,7 +89,8 @@ qstr.listOrEnv <- function(x, ...)
     ## qsetSpacing(l, 0L)
     ## qsetLayout(container, l)
 
-    wlist <- qlistWidget(objs)
+    wlist <- Qt$QListWidget()
+    wlist$addItems(objs)
     for (i in seq_along(objs))
     {
         if (!isList && bindingIsActive(objs[i], x))
@@ -102,12 +103,19 @@ qstr.listOrEnv <- function(x, ...)
             obj.class <- setdiff(is(x[[ objs[i] ]]), "oldClass")
             obj.mode <- mode(x[[ objs[i] ]])
         }
-        qsetItemToolTip(wlist, i,
-                        sprintf("<html>%s<br><strong>Class: </strong>%s<br><strong>Mode: </strong>%s</html>",
-                                objs[i],
-                                paste(obj.class, collapse = ","),
-                                obj.mode))
+        wlist$item(i-1L)$setToolTip(sprintf("<html>%s<br><strong>Class: </strong>%s<br><strong>Mode: </strong>%s</html>",
+                                            objs[i],
+                                            paste(obj.class, collapse = ","),
+                                            obj.mode))
+        ## qsetItemToolTip(wlist, i,
+        ##                 sprintf("<html>%s<br><strong>Class: </strong>%s<br><strong>Mode: </strong>%s</html>",
+        ##                         objs[i],
+        ##                         paste(obj.class, collapse = ","),
+        ##                         obj.mode))
     }
+
+    ## FIXME: rest not done yet
+
     preview.container <- qwidget()
     preview.layout <- qlayout()
     qsetContentsMargins(preview.layout, 0, 0, 0, 0)

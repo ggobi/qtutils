@@ -2,21 +2,25 @@
 
 qtableWidget <- function(nrow = NULL, ncol = NULL)
 {
+    .Deprecated("none")
     .Call(qt_qtableWidget, nrow, ncol)
 }
 
 qisSortingEnabled <- function(x)
 {
+    .Deprecated("none")
     .Call(qt_qisSortingEnabled, x)
 }
 
 qsetSortingEnabled <- function(x, status = TRUE)
 {
+    .Deprecated("none")
     .Call(qt_qsetSortingEnabled, x, as.integer(status))
 }
 
 qsetItem <- function(x, row = 1L, col = 1L, s, extend = FALSE)
 {
+    .Deprecated("none")
     if (inherits(x, "QListWidget"))
         return(.Call(qt_qsetItemListWidget,
                      x, as.integer(row), as.character(s)[1]))
@@ -35,6 +39,7 @@ qsetItem <- function(x, row = 1L, col = 1L, s, extend = FALSE)
 
 qsetCellWidget <- function(x, row = 1L, col = 1L, w)
 {
+    .Deprecated("none")
     if (is(w, "QWidget"))
         .Call(qt_qsetCellWidget, x, as.integer(row), as.integer(col), w)
     else NULL
@@ -42,11 +47,13 @@ qsetCellWidget <- function(x, row = 1L, col = 1L, w)
 
 qresizeColumnsToContents <- function(x, cols = NULL)
 {
+    .Deprecated("none")
     .Call(qt_qresizeColumnsToContents, x, cols)
 }
 
 qresizeRowsToContents <- function(x, rows = NULL)
 {
+    .Deprecated("none")
     .Call(qt_qresizeRowsToContents, x, rows)
 }
 
@@ -54,6 +61,7 @@ qsetHeaderLabels <-
     function(x, colnames = NULL, rownames = NULL,
              extend = FALSE)
 {
+    .Deprecated("none")
     if (extend)
     {
         cdim <- qsetDim(x)
@@ -67,11 +75,13 @@ qsetHeaderLabels <-
 
 qsetDim <- function(x, nrow = NULL, ncol = NULL)
 {
+    .Deprecated("none")
     .Call(qt_qsetDim, x, nrow, ncol)
 }
 
 qcurrentRow <- function(x)
 {
+    .Deprecated("none")
     if (inherits(x, "QListWidget"))
         .Call(qt_qcurrentRowListWidget, x)
     else
@@ -80,6 +90,7 @@ qcurrentRow <- function(x)
 
 qcurrentColumn <- function(x)
 {
+    .Deprecated("none")
     .Call(qt_qcurrentColumn, x)
 }
 
@@ -99,29 +110,29 @@ qdataview.matrix <- qdataview.table <- qdataview.array <-
     cdimnames <- dimnames(x)
     if (length(cdim) > 2)
         stop("Arrays of more than two dimensions not supported yet")
-    if (length(cdim) == 2)
+    if (length(cdim) == 1)
     {
-        ans <- qtableWidget(cdim[1], cdim[2])
-        qsetItem(ans,
-                 row = seq_len(cdim[1]),
-                 col = seq_len(cdim[2]),
-                 as.character(x))
+        cdim <- dim(x) <- c(cdim, 1L)
+        ## FIXME: need to change cdimnames?
     }
-    else if (length(cdim) == 1)
+    ans <- Qt$QTableWidget(cdim[1], cdim[2])
+    sx <- as.character(x)
+    rowx <- row(x) - 1L
+    colx <- col(x) - 1L
+    for (i in seq_len(cdim[1] * cdim[2]))
     {
-        ans <- qtableWidget(cdim[1], 1L)
-        qsetItem(ans,
-                 row = seq_len(cdim[1]),
-                 col = 1L,
-                 as.character(x))        
+        item <- Qt$QTableWidgetItem(sx[i])
+        item$setFlags(33L) ## selectable(1) | can interact(32)
+        ans$setItem(rowx[i], colx[i], item)
     }
     if (!is.null(cdimnames))
     {
         if (!is.null(cdimnames[[1]]))
-            qsetHeaderLabels(ans, rownames = cdimnames[[1]])
+            ans$setVerticalHeaderLabels(cdimnames[[1]])
         if (length(cdimnames) > 1 && !is.null(cdimnames[[2]]))
-            qsetHeaderLabels(ans, colnames = cdimnames[[2]])
+            ans$setHorizontalHeaderLabels(cdimnames[[2]])
     }
+    ans$resize(600, 400)
     ans
 }
 

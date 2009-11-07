@@ -7,16 +7,17 @@ qfile.choose <-
              allow.new = FALSE,
              parent = NULL)
 {
-    .Call(qt_qfile_choose,
-          as.character(caption[1]),
-          as.character(dir[1]),
-          as.character(filter[1]),
-          as.integer(allow.new[1]),
-          if (is(parent, "QWidget")) parent else NULL)
+    FUN <-
+        if (allow.new) Qt$QFileDialog$getSaveFileName
+        else Qt$QFileDialog$getOpenFileName
+    ans <- FUN(parent, caption, path.expand(dir), filter)
+    (ans)
 }
 
 qdir.choose <- function(caption = "", dir = "", parent = NULL)
 {
+
+
     .Call(qt_qdir_choose,
           as.character(caption[1]),
           as.character(dir[1]),

@@ -1,6 +1,6 @@
 
 import(qtbase)
-import(qtgui)
+## import(qtgui)
 
 useDynLib(qtutils, .registration = TRUE)
 
@@ -21,9 +21,10 @@ export(qtableWidget, qisSortingEnabled,
        qresizeRowsToContents, qsetHeaderLabels, qsetDim,
        qcurrentRow, qcurrentColumn)
 
-export(qlistWidget, qitem, qsetItemToolTip)
+export(qlistWidget, qitem, qsetItemToolTip,
+       qaddItem.QListWidget)
 
-S3method(qaddItem, QListWidget)
+## S3method(qaddItem, QListWidget)
 
 export(qdataview, qstr, qrecover, qbrowser)
 
