@@ -1,18 +1,4 @@
 
-qeditor.old <-
-    function(file = stop("file must be supplied"),
-             readonly = FALSE,
-             richtext = FALSE,
-             rsyntax = tail(strsplit(basename(file),
-                                     ".", fixed = TRUE)[[1]],
-                            1) %in% c("R", "r", "S", "r"))
-{
-    .Call(qt_qeditor, path.expand(as.character(file)[1]),
-          as.integer(readonly)[1],
-          as.integer(richtext)[1],
-          as.integer(rsyntax)[1])
-}
-
 qeditor <-
     function(file = NULL,
              readonly = FALSE,

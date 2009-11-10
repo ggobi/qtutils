@@ -107,40 +107,26 @@ qstr.listOrEnv <- function(x, ...)
                                             objs[i],
                                             paste(obj.class, collapse = ","),
                                             obj.mode))
-        ## qsetItemToolTip(wlist, i,
-        ##                 sprintf("<html>%s<br><strong>Class: </strong>%s<br><strong>Mode: </strong>%s</html>",
-        ##                         objs[i],
-        ##                         paste(obj.class, collapse = ","),
-        ##                         obj.mode))
     }
 
     ## FIXME: rest not done yet
 
-    preview.container <- qwidget()
-    preview.layout <- qlayout()
-    qsetContentsMargins(preview.layout, 0, 0, 0, 0)
-    qsetSpacing(preview.layout, 0L)
-    qsetLayout(preview.container, preview.layout)
+    preview.container <- Qt$QWidget()
+    preview.layout <- Qt$QGridLayout()
+    preview.layout$setContentsMargins(0L, 0L, 0L, 0L)
+    preview.layout$setSpacing(0L)
+    preview.container$setLayout(preview.layout)
 
-    ## qsetContentsMargins(wlist, 0, 0, 0, 0)
-##     if (isList)
-##     {
-##         qaddWidget(l, wlist, 1, 1, 2, 1)
-##     }
-##     else 
-##     {
-##         wrepl <- qrepl(x)
-##         qsetExpanding(wrepl, horizontal = FALSE)
-##         qaddWidget(l, wlist, 1, 1)
-##         qaddWidget(l, wrepl, 2, 1)
-##     }
-
-    qaddWidget(container, wlist)
-    qaddWidget(container, preview.container)
-    qsetExpanding(wlist, horizontal = FALSE)
-    qsetExpanding(preview.container, horizontal = TRUE)
-    qsetStretchFactor(container, 0L, 0L)
-    qsetStretchFactor(container, 1L, 10L)
+    container$addWidget(wlist)
+    container$addWidget(preview.container)
+    wlist$setSizePolicy(Qt$QSizePolicy$Preferred, Qt$QSizePolicy$Expanding)
+    ##qsetExpanding(wlist, horizontal = FALSE)
+    preview.container$setSizePolicy(Qt$QSizePolicy$Preferred, Qt$QSizePolicy$Expanding)
+    ## qsetExpanding(preview.container, horizontal = TRUE)
+    container$setStretchFactor(0L, 0L)
+    container$setStretchFactor(1L, 1L)
+    ## qsetStretchFactor(container, 0L, 0L)
+    ## qsetStretchFactor(container, 1L, 10L)
 
     sub.env <- new.env(parent = emptyenv())
     sub.env$preview <- NULL
@@ -150,15 +136,15 @@ qstr.listOrEnv <- function(x, ...)
     sub.env$preview.container <- preview.container
 
     user.data <- list(x = x, sub.env = sub.env)
-    handleSelection <- function(u)
+    handleSelection <- function(row) #user.data
     {
-        i <- qcurrentRow(u$sub.env$wlist)
-        obj <- u$sub.env$objects[i]
-        new.preview <- qstr(u$x[[obj]])
-        if (!is.null(u$sub.env$preview))
-            qclose(u$sub.env$preview)
-        u$sub.env$preview.layout[1,1] <- new.preview
-        u$sub.env$preview <- new.preview
+        i <- 1L + row ##user.data$sub.env$wlist$currentRow
+        obj <- user.data$sub.env$objects[i]
+        new.preview <- qstr(user.data$x[[obj]])
+        if (!is.null(user.data$sub.env$preview))
+            user.data$sub.env$preview$close()
+        user.data$sub.env$preview.layout$addWidget(new.preview, 0, 0)
+        user.data$sub.env$preview <- new.preview
     }
 
 ##     qconnect(wlist,
@@ -169,8 +155,8 @@ qstr.listOrEnv <- function(x, ...)
     ## attr(container, "activation.handler") <- 
     qconnect(wlist,
              signal = "itemActivated",
-             user.data = user.data,
              handler = handleSelection)    
+    ## user.data = user.data,
     container
 }
 

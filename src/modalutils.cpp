@@ -8,20 +8,12 @@
 // QWizard.
 
 
-#include <QFileDialog>
-#include <QColorDialog>
 #include <QInputDialog>
 
 #include <qtbase.h>
 
 extern "C" {
 
-    SEXP qt_qfile_choose(SEXP caption, SEXP dir, 
-			 SEXP filter, SEXP allowNew, 
-			 SEXP parent);
-    SEXP qt_qdir_choose(SEXP caption, SEXP dir, SEXP parent);
-
-    SEXP qt_qgetColor(SEXP parent);
     SEXP qt_qgetDouble(SEXP title, SEXP label, SEXP value, SEXP minValue, SEXP maxValue, SEXP decimals, SEXP parent);
     SEXP qt_qgetInteger(SEXP title, SEXP label, SEXP value, SEXP minValue, SEXP maxValue, SEXP step, SEXP parent);
     SEXP qt_qgetText(SEXP title, SEXP label, SEXP text, SEXP parent);
@@ -31,62 +23,10 @@ extern "C" {
 
 // QFileDialog
 
-SEXP 
-qt_qfile_choose(SEXP caption, SEXP dir, 
-		SEXP filter, SEXP allowNew,
-		// SEXP multiple=FALSE, (allow multiple selctions?
-		// FIXME: needs vector version qstringlist2sexp
-		SEXP parent) {
-    QWidget *p = 0;
-    if (parent != R_NilValue)
-	p = unwrapQObject(parent, QWidget);
-    QString choice;
-    if (asInteger(allowNew))
-	choice = QFileDialog::getSaveFileName
-	    (p,
-	     sexp2qstring(caption),
-	     sexp2qstring(dir),
-	     sexp2qstring(filter));
-    else
-	choice = QFileDialog::getOpenFileName
-	    (p,
-	     sexp2qstring(caption),
-	     sexp2qstring(dir),
-	     sexp2qstring(filter));
-    return
-	qstring2sexp(choice);
-}
-
-SEXP qt_qdir_choose(SEXP caption, SEXP dir, SEXP parent) {
-    QWidget *p = 0;
-    if (parent != R_NilValue)
-	p = unwrapQObject(parent, QWidget);
-    return
-	qstring2sexp(QFileDialog::getExistingDirectory
-		     (p,
-		      sexp2qstring(caption),
-		      sexp2qstring(dir)));
-}
-
-
 // QInputDialog, QMessageBox, QPageSetupDialog, QPrintPreviewDialog,
 // QProgressDialog, and QWizard.
 
 
-SEXP qt_qgetColor(SEXP parent) {
-    SEXP ans;
-    QWidget *p = 0;
-    if (parent != R_NilValue)
-	p = unwrapQObject(parent, QWidget);
-    QRgb rgba = QColorDialog::getRgba(0xffffffff, 0, p);
-    ans = PROTECT(allocVector(INTSXP, 4));
-    INTEGER(ans)[0] = qRed(rgba);
-    INTEGER(ans)[1] = qGreen(rgba);
-    INTEGER(ans)[2] = qBlue(rgba);
-    INTEGER(ans)[3] = qAlpha(rgba);
-    UNPROTECT(1);
-    return ans;
-}
 
 
 SEXP qt_qgetDouble(SEXP title, SEXP label, SEXP value, SEXP minValue, SEXP maxValue, SEXP decimals, SEXP parent) {

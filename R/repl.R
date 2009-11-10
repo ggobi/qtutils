@@ -40,43 +40,47 @@ tryParseEval <- function(text, env)
 }
 
 qrepl <- function(env = .GlobalEnv,
-                  font = qfont("monospace"),
+                  font = Qt$QFont("monospace"),
                   incolor = qcolor("red"),
                   outcolor = qcolor("blue"),
                   errorcolor = qcolor("black"),
                   html.preferred = require(xtable))
 {
     ## input1: REPL-like mode, type and execute code
-    ined1 <- qeditor(tempfile(), rsyntax = TRUE, richtext = TRUE)
+    ined1 <- qeditor(rsyntax = TRUE, richtext = TRUE)
     ined1$setCurrentFont(font)
     ## input2: Editor mode, select and execute code.  input1 text gets appended here
-    ined2 <- qeditor(tempfile(), rsyntax = TRUE, richtext = TRUE)
+    ined2 <- qeditor(rsyntax = TRUE, richtext = TRUE)
     ined2$setCurrentFont(font)
     ## output
-    outed <- qtextEdit()
+    outed <- Qt$QTextEdit()
     outed$readOnly <- TRUE
     ## tabbed widget holding the two input editors
-    intab <- qtabWidget()
-    qaddTab(intab, ined1, label = "Input mode")
-    qaddTab(intab, ined2, label = "Edit mode")
+    intab <- Qt$QTabWidget()
+    intab$addTab(ined1, label = "Input mode")
+    intab$addTab(ined2, label = "Edit mode")
 
-    qsetExpanding(intab, vertical = FALSE)
-    qsetExpanding(outed, vertical = TRUE)
+    intab$setSizePolicy(Qt$QSizePolicy$Expanding,
+                        Qt$QSizePolicy$Preferred)
+    outed$setSizePolicy(Qt$QSizePolicy$Expanding,
+                        Qt$QSizePolicy$Expanding)
+    ## qsetExpanding(intab, vertical = FALSE)
+    ## qsetExpanding(outed, vertical = TRUE)
     ## messages
-    msg <- qlabel("")
+    msg <- Qt$QLabel("")
     msg$wordWrap <- TRUE
     ## container
-    container <- qsplitter(horizontal = FALSE)
-    qaddWidget(container, outed)
-    qaddWidget(container, intab)
-    qaddWidget(container, msg)
-    qsetStretchFactor(container, 0L, 10L)
-    qsetStretchFactor(container, 1L, 0L)
-    qsetStretchFactor(container, 2L, 0L)
+    container <- Qt$QSplitter(Qt$Qt$Vertical)
+    container$addWidget(outed)
+    container$addWidget(intab)
+    container$addWidget(msg)
+    container$setStretchFactor(0L, 10L)
+    container$setStretchFactor(1L, 0L)
+    container$setStretchFactor(2L, 0L)
     msg$text <- "Type code, press Ctrl+Return to evaluate"
     ## add action to execute code
-    qsetContextMenuPolicy(ined1, "actions")
-    qsetContextMenuPolicy(ined2, "actions")
+    ined1$setContextMenuPolicy(Qt$Qt$ActionsContextMenu)
+    ined2$setContextMenuPolicy(Qt$Qt$ActionsContextMenu)
     ## function to perform code execution
 
     executeCode <- function(text, mode = c("input", "edit"))
