@@ -136,9 +136,9 @@ qstr.listOrEnv <- function(x, ...)
     sub.env$preview.container <- preview.container
 
     user.data <- list(x = x, sub.env = sub.env)
-    handleSelection <- function(row) #user.data
+    handleSelection <- function(item) #user.data
     {
-        i <- 1L + row ##user.data$sub.env$wlist$currentRow
+        i <- 1L + user.data$sub.env$wlist$currentRow
         obj <- user.data$sub.env$objects[i]
         new.preview <- qstr(user.data$x[[obj]])
         if (!is.null(user.data$sub.env$preview))

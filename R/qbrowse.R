@@ -51,7 +51,7 @@ qrecover <- function()
         {
             env.collection[[ sprintf("%03d: %s", i, calls[i]) ]] <- sys.frame(i)
         }
-        qshow(qstr(env.collection))
+        qstr(env.collection)$show()
     }
     else
         cat(gettext("No suitable frames for qrecover()\n"))
@@ -90,7 +90,9 @@ qbrowser <- function(namespaces = FALSE)
                 as.environment(paste("package", entries[i-1], sep = ":"))
         }
     }
-    qstr(ans)
+    w <- qstr(ans)
+    w$resize(600, 400)
+    w
 }
 
 

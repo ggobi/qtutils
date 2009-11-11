@@ -48,7 +48,9 @@ qselectedText <- function(x, ...) UseMethod("qselectedText")
 
 qselectedText.QTextEdit <- function(x, ...)
 {
-    x$textCursor()$selection()$toPlainText()
+    ans <- x$textCursor()$selection()$toPlainText()
+    if (is.null(ans)) ""
+    else ans
 }
 
 qpager <-
