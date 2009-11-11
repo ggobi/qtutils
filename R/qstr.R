@@ -157,6 +157,7 @@ qstr.listOrEnv <- function(x, ...)
              signal = "itemActivated",
              handler = handleSelection)    
     ## user.data = user.data,
+    container$resize(600, 400)
     container
 }
 

@@ -39,6 +39,7 @@ qeditor <-
     edit$setTextCursor(cursor)
     edit$ensureCursorVisible()
 
+    edit$resize(600, 400)
     edit
 }
 
