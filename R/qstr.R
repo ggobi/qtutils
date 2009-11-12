@@ -19,8 +19,14 @@ qstr.default <- function(x, ...)
     w
 }
 
-## "qstr.try-error" <- ??? default OK?
+## Qt objects should not be shown, especially QWidgets.  Even others
+## may occasionally have problems when treated as environments, but
+## not sure if it would be more effective to (1) write methods or (2)
+## put in some try() statements in the environment method
 
+qstr.QWidget <- function(x, ...) qstr.default(class(x))
+
+## "qstr.try-error" <- ??? default OK?
 
 qstr.data.frame <- function(x, ...)
 {
@@ -106,13 +112,16 @@ qstr.listOrEnv <- function(x, ...)
             obj.class <- try(setdiff(is(x[[ objs[i] ]]), "oldClass"), silent = TRUE)
             obj.mode <- try(mode(x[[ objs[i] ]]), silent = TRUE)
         }
-        wlist$item(i-1L)$setToolTip(sprintf("<html>%s<br><strong>Class: </strong>%s<br><strong>Mode: </strong>%s</html>",
-                                            objs[i],
-                                            paste(obj.class, collapse = ","),
-                                            obj.mode))
+        if (is(obj.class, "try-error"))
+            wlist$item(i-1L)$setToolTip(sprintf("<html>%s<br><strong>Error on evaluation: </strong>%s</html>",
+                                                objs[i],
+                                                as.character(obj.class)))
+        else
+            wlist$item(i-1L)$setToolTip(sprintf("<html>%s<br><strong>Class: </strong>%s<br><strong>Mode: </strong>%s</html>",
+                                                objs[i],
+                                                paste(obj.class, collapse = ","),
+                                                obj.mode))
     }
-
-    ## FIXME: rest not done yet
 
     preview.container <- Qt$QWidget()
     preview.layout <- Qt$QGridLayout()
@@ -143,7 +152,7 @@ qstr.listOrEnv <- function(x, ...)
     {
         i <- 1L + user.data$sub.env$wlist$currentRow
         obj <- user.data$sub.env$objects[i]
-        new.preview <- qstr(user.data$x[[obj]])
+        new.preview <- qstr(try(user.data$x[[obj]], silent = TRUE))
         if (!is.null(user.data$sub.env$preview))
             user.data$sub.env$preview$close()
         user.data$sub.env$preview.layout$addWidget(new.preview, 0, 0)

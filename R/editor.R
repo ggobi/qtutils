@@ -29,7 +29,8 @@ qeditor <-
     if (!is.null(file)) 
     {
         stream <- Qt$QTextStream(qfile)
-        edit$setText(stream$readAll())
+        txt <- stream$readAll()
+        if (!is.null(txt)) edit$setText(txt)
         if (readonly) edit$setReadOnly(TRUE)
         qfile$close()
     }
