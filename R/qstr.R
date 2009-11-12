@@ -19,6 +19,9 @@ qstr.default <- function(x, ...)
     w
 }
 
+## "qstr.try-error" <- ??? default OK?
+
+
 qstr.data.frame <- function(x, ...)
 {
     qdataview(x)
@@ -100,8 +103,8 @@ qstr.listOrEnv <- function(x, ...)
         else
         {
             ## obj.class <- class(x[[ objs[i] ]]) ## FIXME: use is()? S3 works?
-            obj.class <- setdiff(is(x[[ objs[i] ]]), "oldClass")
-            obj.mode <- mode(x[[ objs[i] ]])
+            obj.class <- try(setdiff(is(x[[ objs[i] ]]), "oldClass"), silent = TRUE)
+            obj.mode <- try(mode(x[[ objs[i] ]]), silent = TRUE)
         }
         wlist$item(i-1L)$setToolTip(sprintf("<html>%s<br><strong>Class: </strong>%s<br><strong>Mode: </strong>%s</html>",
                                             objs[i],
