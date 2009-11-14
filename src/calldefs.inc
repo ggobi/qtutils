@@ -12,6 +12,7 @@
 
     CALLDEF(qt_qeditor, 4),
     CALLDEF(qt_qselectedText_QTextEdit, 1),
+    CALLDEF(qt_qsetRSyntaxHighlighter, 1),
 
     CALLDEF(qt_qlistWidget, 1),
     CALLDEF(qt_qitem, 2),

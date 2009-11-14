@@ -14,6 +14,16 @@ extern "C" {
 }
 
 SEXP
+qt_qsetRSyntaxHighlighter(SEXP x)
+{
+    QTextEdit *edit = unwrapSmoke(x, QTextEdit);
+    RSyntaxHighlighter *highlighter = new RSyntaxHighlighter(edit->document());
+    highlighter->setActive(true);
+    return R_NilValue;
+}
+
+
+SEXP
 qt_qeditor(SEXP file, SEXP readonly, SEXP richtext, SEXP rsyntax)
 {
     QFile *qfile = new QFile(sexp2qstring(file));

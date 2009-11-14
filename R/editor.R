@@ -25,6 +25,8 @@ qeditor <-
         edit$setFontFamily("monospace")
 	edit$setLineWrapMode(Qt$QTextEdit$NoWrap)
     }
+    if (rsyntax)
+        .Call(qt_qsetRSyntaxHighlighter, edit)
     
     if (!is.null(file)) 
     {
