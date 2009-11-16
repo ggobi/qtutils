@@ -1,28 +1,10 @@
 
 
-qtableWidget <- function(nrow = NULL, ncol = NULL)
-{
-    .Deprecated("none")
-    .Call(qt_qtableWidget, nrow, ncol)
-}
-
-qisSortingEnabled <- function(x)
-{
-    .Deprecated("none")
-    .Call(qt_qisSortingEnabled, x)
-}
-
-qsetSortingEnabled <- function(x, status = TRUE)
-{
-    .Deprecated("none")
-    .Call(qt_qsetSortingEnabled, x, as.integer(status))
-}
-
 qsetItem <- function(x, row = 1L, col = 1L, s, extend = FALSE)
 {
     .Deprecated("none")
     if (inherits(x, "QListWidget"))
-        return(.Call(qt_qsetItemListWidget,
+        return(.Call(qt_qsetItem_ListWidget,
                      x, as.integer(row), as.character(s)[1]))
     if (extend)
     {
@@ -37,26 +19,6 @@ qsetItem <- function(x, row = 1L, col = 1L, s, extend = FALSE)
 ## FIXME: not clear what this actually does.  Setting w = qlineEdit()
 ## makes the text editable, but that seems to be about it.
 
-qsetCellWidget <- function(x, row = 1L, col = 1L, w)
-{
-    .Deprecated("none")
-    if (is(w, "QWidget"))
-        .Call(qt_qsetCellWidget, x, as.integer(row), as.integer(col), w)
-    else NULL
-}
-
-qresizeColumnsToContents <- function(x, cols = NULL)
-{
-    .Deprecated("none")
-    .Call(qt_qresizeColumnsToContents, x, cols)
-}
-
-qresizeRowsToContents <- function(x, rows = NULL)
-{
-    .Deprecated("none")
-    .Call(qt_qresizeRowsToContents, x, rows)
-}
-
 qsetHeaderLabels <-
     function(x, colnames = NULL, rownames = NULL,
              extend = FALSE)
@@ -70,33 +32,8 @@ qsetHeaderLabels <-
                     max(length(rownames), cdim[1]),
                     max(length(colnames), cdim[2]))
     }
-    .Call(qt_qsetHeaderLabels, x, colnames, rownames)
+    .Call(qt_qsetHeaderLabels_QTableWidget, x, colnames, rownames)
 }
-
-qsetDim <- function(x, nrow = NULL, ncol = NULL)
-{
-    .Deprecated("none")
-    .Call(qt_qsetDim, x, nrow, ncol)
-}
-
-qcurrentRow <- function(x)
-{
-    .Deprecated("none")
-    if (inherits(x, "QListWidget"))
-        .Call(qt_qcurrentRowListWidget, x)
-    else
-        .Call(qt_qcurrentRow, x)
-}
-
-qcurrentColumn <- function(x)
-{
-    .Deprecated("none")
-    .Call(qt_qcurrentColumn, x)
-}
-
-
-
-
 
 qdataview <- function(x, ...)
 {
