@@ -90,14 +90,6 @@ qstr.listOrEnv <- function(x, ...)
     container <- Qt$QSplitter(1L) ## qsplitter(horizontal = TRUE)
     container$opaqueResize <- FALSE
 
-    ## container <- qwidget()
-    ## qsetExpanding(container, horizontal = TRUE)
-    ## qsetContentsMargins(container, 0, 0, 0, 0)
-    ## l <- qlayout(NULL)
-    ## qsetContentsMargins(l, 0, 0, 0, 0)
-    ## qsetSpacing(l, 0L)
-    ## qsetLayout(container, l)
-
     wlist <- Qt$QListWidget()
     wlist$addItems(objs)
     for (i in seq_along(objs))
@@ -123,6 +115,22 @@ qstr.listOrEnv <- function(x, ...)
                                                 obj.mode))
     }
 
+    ## If wlist represents an environment, add a context-menu action
+    ## to open an evaluation environment.
+    if (!isList)
+    {
+        wlist$setContextMenuPolicy(Qt$Qt$ActionsContextMenu)
+        replAct <- Qt$QAction(text = "Start Evaluation Interface",
+                              parent = wlist)
+        replAct$setShortcutContext(Qt$Qt$WidgetShortcut)
+        replAct$setShortcut(Qt$QKeySequence("Ctrl+Return"))
+        replHandler <- function(checked) {
+            qrepl(x, ...)$show()
+        }
+        qconnect(replAct, signal = "triggered", handler = replHandler)
+        wlist$addAction(replAct)
+    }
+
     preview.container <- Qt$QWidget()
     preview.layout <- Qt$QGridLayout()
     preview.layout$setContentsMargins(0L, 0L, 0L, 0L)
@@ -131,9 +139,11 @@ qstr.listOrEnv <- function(x, ...)
 
     container$addWidget(wlist)
     container$addWidget(preview.container)
-    wlist$setSizePolicy(Qt$QSizePolicy$Preferred, Qt$QSizePolicy$Expanding)
+    wlist$setSizePolicy(Qt$QSizePolicy$Preferred,
+                        Qt$QSizePolicy$Expanding)
     ##qsetExpanding(wlist, horizontal = FALSE)
-    preview.container$setSizePolicy(Qt$QSizePolicy$Preferred, Qt$QSizePolicy$Expanding)
+    preview.container$setSizePolicy(Qt$QSizePolicy$Preferred,
+                                    Qt$QSizePolicy$Expanding)
     ## qsetExpanding(preview.container, horizontal = TRUE)
     container$setStretchFactor(0L, 0L)
     container$setStretchFactor(1L, 1L)

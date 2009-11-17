@@ -19,11 +19,13 @@ TEMPLATE = lib
 # Input
 
 HEADERS += RSyntaxHighlighter.h 
-HEADERS += dataview.h editor.h listview.h textedit.h
+HEADERS += dataview.h editor.h listview.h textedit.h 
+HEADERS += scenedevice.hpp devhelpers.hpp
 
 SOURCES += init.c imports.cpp modalutils.cpp 
 SOURCES += RSyntaxHighlighter.cpp editor.cpp 
-SOURCES += dataview.cpp listview.cpp textedit.cpp
+SOURCES += dataview.cpp listview.cpp textedit.cpp 
+SOURCES += scenedevice.cpp devhelpers.cpp
 
 INCLUDEPATH += ${R_INCLUDE_DIR}
 INCLUDEPATH += ${CLINK_CPPFLAGS/-I/}

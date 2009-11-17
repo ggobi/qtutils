@@ -230,6 +230,7 @@ qrepl <- function(env = .GlobalEnv,
     ined2$addAction(loadAct)
 
     ## return containing splitter
+    container$resize(600, 400)
     container
 }
 
