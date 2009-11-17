@@ -13,6 +13,8 @@ SEXP qt_qgetText(SEXP title, SEXP label, SEXP text, SEXP parent);
 #include "listview.h"
 #include "textedit.h"
 
+SEXP qt_qsceneDevice(SEXP width, SEXP height, SEXP pointsize, SEXP family, SEXP rscene);
+
 void R_init_qtutils(DllInfo *dll);
 
 #define CALLDEF(name, n)  {#name, (DL_FUNC) &name, n}
@@ -24,6 +26,8 @@ static R_CallMethodDef CallEntries[] = {
     CALLDEF(qt_qgetText, 4),
 
 #include "calldefs.inc"
+
+    CALLDEF(qt_qsceneDevice, 5),
 
     {NULL, NULL, 0}
 };
