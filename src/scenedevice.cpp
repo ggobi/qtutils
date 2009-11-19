@@ -1,7 +1,7 @@
 
 #include <QApplication>
 #include <QGraphicsView>
-#include <QGraphicsTextItem>
+#include <QGraphicsSimpleTextItem>
 #include <QFontMetricsF>
 
 #include <qtbase.h>
@@ -363,11 +363,12 @@ RSceneDevice::TextUTF8(double x, double y, char *str,
     int fontface = gc->fontface;
     char* fontfamily = gc->fontfamily; // [201] ??
     QString qstr = QString::fromUtf8(str);
-    QGraphicsTextItem 
-	*text = scene()->addText(qstr, 
-			       r2qFont(fontfamily, fontface, ps, cex, lineheight,
-				       defaultFamily()));
-    text->setDefaultTextColor(r2qColor(col));
+    QGraphicsSimpleTextItem 
+	*text = scene()->addSimpleText(qstr, 
+				       r2qFont(fontfamily, fontface, ps, cex, lineheight,
+					       defaultFamily()));
+    // text->setDefaultTextColor(r2qColor(col)); // for QGraphicsTextItem
+    text->setBrush(QBrush(r2qColor(col)));
     QRectF brect = text->boundingRect();
     text->rotate(-rot);
     text->translate(-hadj * brect.width(), -0.7 * brect.height());
@@ -464,7 +465,7 @@ RSceneDevice::StrWidthUTF8(char *str,
     int fontface = gc->fontface;
     char* fontfamily = gc->fontfamily;
     QString qstr = QString::fromUtf8(str);
-    QGraphicsTextItem *text = new QGraphicsTextItem(str, 0);
+    QGraphicsSimpleTextItem *text = new QGraphicsSimpleTextItem(str, 0);
     text->setFont(r2qFont(fontfamily, fontface, 
 			  ps, cex, lineheight,
 			  defaultFamily()));
