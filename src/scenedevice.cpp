@@ -1,7 +1,7 @@
 
 #include <QApplication>
 #include <QGraphicsView>
-#include <QGraphicsSimpleTextItem>
+#include <QGraphicsTextItem>
 #include <QFontMetricsF>
 
 #include <qtbase.h>
@@ -363,12 +363,15 @@ RSceneDevice::TextUTF8(double x, double y, char *str,
     int fontface = gc->fontface;
     char* fontfamily = gc->fontfamily; // [201] ??
     QString qstr = QString::fromUtf8(str);
-    QGraphicsSimpleTextItem 
-	*text = scene()->addSimpleText(qstr, 
-				       r2qFont(fontfamily, fontface, ps, cex, lineheight,
-					       defaultFamily()));
-    // text->setDefaultTextColor(r2qColor(col)); // for QGraphicsTextItem
-    text->setBrush(QBrush(r2qColor(col)));
+    // we have a choice between using QGraphicsTextItem and
+    // QGraphicsSimpleTextItem.  We'll use the first because it allows
+    // us to make them HTML links later from R
+    QGraphicsTextItem 
+	*text = scene()->addText(qstr, 
+				 r2qFont(fontfamily, fontface, ps, cex, lineheight,
+					 defaultFamily()));
+    text->setDefaultTextColor(r2qColor(col)); // for QGraphicsTextItem
+    // text->setBrush(QBrush(r2qColor(col))); // for QGraphicsSimpleTextItem
     QRectF brect = text->boundingRect();
     text->rotate(-rot);
     text->translate(-hadj * brect.width(), -0.7 * brect.height());
