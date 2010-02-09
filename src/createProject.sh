@@ -22,7 +22,7 @@ HEADERS += RSyntaxHighlighter.h
 HEADERS += dataview.h editor.h listview.h textedit.h 
 HEADERS += scenedevice.hpp devhelpers.hpp
 
-SOURCES += init.c imports.cpp modalutils.cpp 
+SOURCES += init.c imports.cpp 
 SOURCES += RSyntaxHighlighter.cpp editor.cpp 
 SOURCES += dataview.cpp listview.cpp textedit.cpp 
 SOURCES += scenedevice.cpp devhelpers.cpp
