@@ -31,7 +31,7 @@ myview$fitInView(-50, -50, 100, 100, Qt$Qt$KeepAspectRatio)
 
 ## How do we work with QGraphicsLayouts?
 
-## Simple example: A scatterplot with a (strip-like) main title.  Main
+## Simple example: A scatterplot with a (strip-like) main title, and a y-axis.  Main
 ## title height should be fixed, scatterplot should occupy full space.
 
 library(qtbase)
@@ -48,7 +48,7 @@ main <- "Main title"
 mainLabel <- Qt$QLabel(main)
 mainLabel$setAlignment(Qt$Qt$AlignVCenter | Qt$Qt$AlignHCenter)
 
-## A custom QGraphicsView class
+## A custom QGraphicsView class for the scatterplot
 
 qsetClass("MyView", Qt$QGraphicsView,
           constructor = function(...) {
@@ -73,13 +73,53 @@ axisRect <- Qt$QRectF(lims$xlim[1], lims$ylim[1],
 axisRectItem <- myscene$addRect(axisRect)
 myscene$setSceneRect(axisRect)
 
-## myview$setHorizontalScrollBarPolicy(Qt$Qt$ScrollBarAlwaysOff)
-## myview$setVerticalScrollBarPolicy(Qt$Qt$ScrollBarAlwaysOff)
-
 myview
 
-## myview$fitInView(axisRect, Qt$Qt$KeepAspectRatio)
-## myview$fitInView(axisRect, Qt$Qt$IgnoreAspectRatio)
+
+## A custom QGraphicsView class for the y-axis
+
+qsetClass("MyYAxis", Qt$QGraphicsView,
+          constructor = function(..., limit = c(0, 1), rot = 0) {
+              parent(...)
+              this$setHorizontalScrollBarPolicy(Qt$Qt$ScrollBarAlwaysOff)
+              this$setVerticalScrollBarPolicy(Qt$Qt$ScrollBarAlwaysOff)
+              this$limit <- limit
+              this$rot <- rot
+          })
+qsetMethod("resizeEvent", MyYAxis, 
+           function(event) {
+               scene <- this$scene() ## FIXME: what if null?
+               scene$clear()
+               at <- pretty(this$limit)
+               labels <- as.character(at)
+               keep <- at > min(this$limit) & at < max(this$limit)
+               at <- at[keep]
+               labels <- labels[keep]
+               for (i in seq_along(at))
+               {
+                   text <- scene$addText(labels[i])
+                   brect <- text$boundingRect()
+                   text$rotate(-this$rot)
+                   ## text->translate(-hadj * brect.width(), -0.7 * brect.height());
+                   text$setPos(0, at[i])
+               }
+               axisRect <- Qt$QRectF(0, lims$ylim[1],
+                                     brect$width(),
+                                     lims$ylim[2] - lims$ylim[1])
+               scene$setSceneRect(axisRect)
+               this$fitInView(this$sceneRect, Qt$Qt$IgnoreAspectRatio)
+           }, "protected")
+
+yaxisscene <- Qt$QGraphicsScene()
+yaxisscene$setItemIndexMethod(Qt$QGraphicsScene$NoIndex)
+yaxisview <- MyYAxis()
+yaxisview$setScene(yaxisscene)
+
+
+yaxisview
+
+
+
 
 root <- Qt$QWidget()
 root$setContentsMargins(0, 0, 0, 0)
