@@ -7,7 +7,9 @@ useDynLib(qtutils, .registration = TRUE)
 export(qfile.choose, qdir.choose, qgetColor,
        qgetDouble, qgetInteger, qgetText)
 
-export(qexport, qhelp, qeditor, qselectedText, qrepl, qsceneDevice)
+export(qexport, qhelp, qeditor, qselectedText, qrepl)
+
+export(qsceneDevice, QT, exportToFile)
 
 S3method(qselectedText, QTextEdit)
 
