@@ -1,7 +1,7 @@
 
 
 qsceneDevice <-
-    function(width = 7, height = 7, pointsize = 12, family = "",
+    function(width = 10, height = 10, pointsize = 12, family = "",
              rscene = Qt$QGraphicsScene())
 {
     force(rscene)
@@ -138,9 +138,9 @@ saveAsImage <- function(gview, fmt, full = TRUE)
 addImageExportAction <- function(gview)
 {
     saveAsMenu <- Qt$QMenu("&Export As", gview)
-    ## FIXME: doesn't work because QByteArray not handled
-    ## supportedFormats <- unlist(QImageReader::supportedImageFormats()))
-    supportedFormats <- c("BMP", "JPG", "PNG")
+    supportedFormats <-
+        unique(toupper(sapply(Qt$QImageWriter$supportedImageFormats(),
+                              rawToChar)))
     for (fmt in supportedFormats)
     {
         action <- Qt$QAction(fmt, gview)
