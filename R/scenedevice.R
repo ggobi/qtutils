@@ -15,7 +15,7 @@ qsceneDevice <-
 }
 
 
-QT <- function(..., antialias = TRUE)
+QT <- function(..., antialias = TRUE, opengl = FALSE)
 {
     rscene <- qsceneDevice(...)
     gview <- Qt$QGraphicsView(rscene)
@@ -87,6 +87,9 @@ QT <- function(..., antialias = TRUE)
     ## Action to export (to image file)
     addImageExportAction(gview)
 
+    if (opengl)
+      gview$setViewport(Qt$QGLWidget())
+    
     ## Return view widget
     gview
 }
