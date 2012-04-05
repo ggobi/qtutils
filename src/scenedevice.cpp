@@ -98,6 +98,8 @@ qt_qsceneDevice(SEXP width,
 //     return wrapQWidget(v);
 // }
 
+
+
 static
 RSceneDevice *startdev(double width,
 		       double height,
