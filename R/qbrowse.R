@@ -95,5 +95,3 @@ qbrowser <- function(namespaces = FALSE)
     w
 }
 
-
-

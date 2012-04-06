@@ -1,39 +1,22 @@
 
+## ## FIXME: not clear what this actually does.  Setting w = qlineEdit()
+## ## makes the text editable, but that seems to be about it.
 
-qsetItem <- function(x, row = 1L, col = 1L, s, extend = FALSE)
-{
-    .Deprecated("none")
-    if (inherits(x, "QListWidget"))
-        return(.Call(qt_qsetItem_ListWidget,
-                     x, as.integer(row), as.character(s)[1]))
-    if (extend)
-    {
-        cdim <- qsetDim(x)
-        if (any(row > cdim[1]) || any(col > cdim[2]))
-            qsetDim(x, max(row, cdim[1]), max(col, cdim[2]))
-    }
-    .Call(qt_qsetItem, x, as.integer(row), as.integer(col), as.character(s))
-}
-
-
-## FIXME: not clear what this actually does.  Setting w = qlineEdit()
-## makes the text editable, but that seems to be about it.
-
-qsetHeaderLabels <-
-    function(x, colnames = NULL, rownames = NULL,
-             extend = FALSE)
-{
-    .Deprecated("none")
-    if (extend)
-    {
-        cdim <- qsetDim(x)
-        if ((length(rownames) > cdim[1]) || (length(colnames) > cdim[2]))
-            qsetDim(x,
-                    max(length(rownames), cdim[1]),
-                    max(length(colnames), cdim[2]))
-    }
-    .Call(qt_qsetHeaderLabels_QTableWidget, x, colnames, rownames)
-}
+## qsetHeaderLabels <-
+##     function(x, colnames = NULL, rownames = NULL,
+##              extend = FALSE)
+## {
+##     .Deprecated("none")
+##     if (extend)
+##     {
+##         cdim <- qsetDim(x)
+##         if ((length(rownames) > cdim[1]) || (length(colnames) > cdim[2]))
+##             qsetDim(x,
+##                     max(length(rownames), cdim[1]),
+##                     max(length(colnames), cdim[2]))
+##     }
+##     .Call(qt_qsetHeaderLabels_QTableWidget, x, colnames, rownames)
+## }
 
 qdataview <- function(x, ...)
 {

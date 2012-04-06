@@ -1,4 +1,13 @@
 
+qselectedText_QTextEdit <- function(x)
+{
+    ans <- x$textCursor()$selection()$toPlainText()
+    if (is.null(ans)) ""
+    else ans
+}
+
+
+
 ## not exactly a REPL, but something that looks like it. The idea is
 ## to have a widget where one can input R commands, and evaluate them
 ## on demand.  The typical use case would be a limited REPL as used in
@@ -6,7 +15,6 @@
 
 
 ## Two editors in a splitter, one for input and one for output.
-
 
 
 tryComplete <- function(text, cursor = nchar(text))
@@ -39,6 +47,25 @@ tryParseEval <- function(text, env)
     ans
 }
 
+
+
+
+##' Creates a Qt Widget that emulates the R REPL
+##'
+##' This widget tries to emulate the behaviour of the R command-line
+##' interface (Read-Eval-Print-Loop) in a GUI.  The current
+##' implementation is essentially a proof-of-concept, and not meant
+##' for serious use.
+##' 
+##' @title A Qt based REPL emulator
+##' @param env The evaluation environment for the REPL. 
+##' @param font A QFont instance. 
+##' @param incolor The color used for code that is evaluated.
+##' @param outcolor The color used for output.
+##' @param errorcolor The color used for error messages.
+##' @param html.preferred Logical.  Whether HTML output is preferred (for table-like objects).
+##' @return A QWidget instance
+##' @author Deepayan Sarkar
 qrepl <- function(env = .GlobalEnv,
                   font = Qt$QFont("monospace"),
                   incolor = qcolor("red"),
@@ -159,7 +186,7 @@ qrepl <- function(env = .GlobalEnv,
     {
         ## execute if selection exists, else select minimal parseable
         ## input starting backwords from current line
-        sel <- qselectedText(ined2)
+        sel <- qselectedText_QTextEdit(ined2)
         if (nzchar(sel))
         {
             executeCode(sel, mode = "edit")
@@ -174,13 +201,13 @@ qrepl <- function(env = .GlobalEnv,
             ined2$moveCursor(Qt$QTextCursor$StartOfLine, Qt$QTextCursor$KeepAnchor)
             ## qmoveCursor(ined2, "endofline", select = FALSE)
             ## qmoveCursor(ined2, "startofline", select = TRUE)
-            parseable <- !is(try(parse(text = qselectedText(ined2)), silent = TRUE), "try-error")
+            parseable <- !is(try(parse(text = qselectedText_QTextEdit(ined2)), silent = TRUE), "try-error")
             reached0 <- ined2$textCursor()$position() == 0L ## qcursorPosition(ined2) == 0L
             while (!parseable && !reached0)
             {
                 ined2$moveCursor(Qt$QTextCursor$Up, Qt$QTextCursor$KeepAnchor)
                 ## qmoveCursor(ined2, "up", select = TRUE)
-                parseable <- !is(try(parse(text = qselectedText(ined2)), silent = TRUE), "try-error")
+                parseable <- !is(try(parse(text = qselectedText_QTextEdit(ined2)), silent = TRUE), "try-error")
                 reached0 <- qcursorPosition(ined2) == 0L
             }
             if (!parseable) ## qsetCursorPosition(ined2, oldPos) ## restore
@@ -256,3 +283,172 @@ qrepl <- function(env = .GlobalEnv,
 ## zoomoutAct2$shortcutContext <- 0 ## only triggered when widget has focus
 ## qconnect(zoomoutAct2, signal = "triggered", handler = function() ined2$zoomOut())
 ## qaddAction(ined2, zoomoutAct2)
+
+
+qreplu <- function(env = .GlobalEnv,
+                   font = Qt$QFont("monospace"),
+                   incolor = qcolor("red"),
+                   outcolor = qcolor("blue"),
+                   errorcolor = qcolor("black"),
+                   messagecolor = qcolor("black"),
+                   html.preferred = FALSE)
+{
+    ## ed: REPL-like mode, type and execute code
+    ed <- qeditor(rsyntax = FALSE, richtext = FALSE)
+    ed$setCurrentFont(font)
+
+    ## messages
+    msg <- Qt$QLabel("")
+    msg$wordWrap <- TRUE
+    ## container
+    container <- Qt$QSplitter(Qt$Qt$Vertical)
+    container$addWidget(ed)
+    container$addWidget(msg)
+    container$setStretchFactor(0L, 10L)
+    container$setStretchFactor(1L, 0L)
+    msg$text <- "Type code, press Ctrl+Return to evaluate"
+
+    ed$setContextMenuPolicy(Qt$Qt$ActionsContextMenu)
+
+    ed$insertHtml("<p>Welcome to qrepl().</p> <br>")
+
+    ed$setCurrentFont(font)
+    ed$setTextColor(incolor)
+    ed$insertPlainText("\n> ")
+    ed$moveCursor(Qt$QTextCursor$End)
+    lastPosition <- ed$textCursor()$position()
+
+    evalenv <- env
+    setEnv <- function(e)
+    {
+        evalenv <<- e
+        m <- capture.output(print(e))
+        ## ed$setTextColor(messagecolor)
+        ## ed$insertPlainText(sprintf("\n\nChanged active environment to %s.\n", m))
+        ## ed$setCurrentFont(font)
+        ## ed$setTextColor(incolor)
+        ## ed$insertPlainText("\n> ")
+        ## ed$moveCursor(Qt$QTextCursor$End)
+        ## lastPosition <<- ed$textCursor()$position()
+        msg$text <- sprintf("\n\nChanged active environment to %s.\n", m)
+   }
+
+    setReadOnlyMode <- function(undo = FALSE)
+    {
+        ## ed$setReadOnly(ed$textCursor()$position() < lastPosition)
+        if (ed$textCursor()$position() < lastPosition)
+        {
+            if (undo) ed$undo()
+            ic <- ed$textCursor()
+            ic$setPosition(lastPosition)
+            ed$setTextCursor(ic)
+        }
+    }
+    
+    qconnect(ed, "cursorPositionChanged", setReadOnlyMode)
+    qconnect(ed, "textChanged", setReadOnlyMode, user.data = TRUE)
+
+    processCodeIfReady <- function()
+    {
+        ed$moveCursor(Qt$QTextCursor$End)
+        ic <- ed$textCursor()
+        ic$setPosition(lastPosition, Qt$QTextCursor$KeepAnchor)
+        ed$setTextCursor(ic)
+        intext <- qselectedText_QTextEdit(ed)
+        parseable <- !is(try(parse(text = intext), silent = TRUE), "try-error")
+        if (parseable)
+        {
+            ic$removeSelectedText()
+            executeCode(intext)
+        }
+    }
+
+    ## add action to execute code
+
+    runAct <- Qt$QAction(text = "Execute", parent = ed)
+    runAct$setShortcut(Qt$QKeySequence("Ctrl+Return"))
+    runAct$setShortcutContext(Qt$Qt$WidgetShortcut) ## only triggered when widget has focus
+    qconnect(runAct, signal = "triggered", handler = processCodeIfReady)
+    ed$addAction(runAct)
+
+    closeAct <- Qt$QAction(text = "Close REPL", parent = ed)
+    closeAct$setShortcut(Qt$QKeySequence("Ctrl+Q"))
+    closeAct$setShortcutContext(Qt$Qt$WidgetShortcut) ## only triggered when widget has focus
+    qconnect(closeAct, signal = "triggered", handler = container$close)
+    ed$addAction(closeAct)
+    
+    ## function to perform code execution
+
+    executeCode <- function(text)
+    {
+        pe <- tryParseEval(text = text, env = env)
+        if (is(pe, "try-error"))
+        {
+            msg$text <- paste(strsplit(as.character(pe), "\n", fixed = TRUE)[[1]], collapse = "\\n")
+            return (FALSE)
+        }
+        else
+        {
+            msg$text <- "Evaluating..."
+            ic <- ed$textCursor()
+            ic$setPosition(lastPosition)
+            lastPosition <<- lastPosition - 2L
+            ed$setTextCursor(ic)
+            ed$moveCursor(Qt$QTextCursor$StartOfLine, Qt$QTextCursor$KeepAnchor)
+            ed$textCursor()$removeSelectedText()
+            for (i in seq_along(pe))
+            {
+                ein <- pe[[i]]$ein
+                output <- pe[[i]]$output
+                evis <- pe[[i]]$evis
+                ## input
+                ed$setCurrentFont(font)
+                ed$setTextColor(incolor)
+                ed$insertPlainText(ein)
+                ed$insertPlainText("\n")
+                ## output
+                ed$setTextColor(outcolor)
+                ## any captured output (by-product of evaluation)
+                if (length(output))
+                    ed$insertPlainText(paste(output, collapse = "\n"))
+                ## return value of evaluation (may need to be printed)
+                if (inherits(evis, "try-error"))
+                {
+                    ed$moveCursor(Qt$QTextCursor$End)
+                    ed$setTextColor(errorcolor)
+                    ed$insertPlainText(paste(strsplit(as.character(evis), "\n")[[1]],
+                                    collapse = "\n")) # remove final newline
+                }
+                else if (evis$visible)
+                {
+                    if (html.preferred &&
+                        !inherits(try(xtab <- xtable(evis$value), silent = TRUE),
+                                  "try-error"))
+                    {
+                        ed$moveCursor(Qt$QTextCursor$End)
+                        html.output <- capture.output(print(xtab, type = "html"))
+                        ## FIXME: need something append-like (add to end)
+                        ed$insertHtml(paste(html.output, collapse = "\n"))
+                    }
+                    else
+                    {
+                        text.output <- capture.output(evis$value)
+                        ed$insertPlainText(paste(text.output, collapse = "\n"))
+                    }
+                }
+            }
+            ed$setTextColor(incolor)
+            ed$insertPlainText("\n> ")
+            ed$moveCursor(Qt$QTextCursor$End)
+            lastPosition <<- ed$textCursor()$position()
+            msg$text <- "Type code, press Ctrl+Return to evaluate"
+        }
+    }
+
+    ## return containing splitter
+    container$resize(600, 400)
+    attr(container, "setEnv") <- setEnv
+    container
+}
+
+

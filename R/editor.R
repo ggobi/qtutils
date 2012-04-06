@@ -50,14 +50,14 @@ qeditor <-
 
 
 
-qselectedText <- function(x, ...) UseMethod("qselectedText")
+## qselectedText <- function(x, ...) UseMethod("qselectedText")
 
-qselectedText.QTextEdit <- function(x, ...)
-{
-    ans <- x$textCursor()$selection()$toPlainText()
-    if (is.null(ans)) ""
-    else ans
-}
+## qselectedText.QTextEdit <- function(x, ...)
+## {
+##     ans <- x$textCursor()$selection()$toPlainText()
+##     if (is.null(ans)) ""
+##     else ans
+## }
 
 qpager <-
     function(file,

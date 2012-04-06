@@ -1,7 +1,16 @@
 
-## various utilities, typically modal dialogs such as file chooser,
-## yes/no dialogs, or message dialogs.
+## Convenient interfaces to various built-in modal dialogs such as
+## file chooser, color picker, integer/text/etc. input.
 
+
+##' .. content for \description{} (no empty lines) ..
+##'
+##' .. content for \details{} ..
+##' @title Qt-based file chooser
+##' @param caption 
+##' @param dir 
+##' @param parent 
+##' @author Deepayan Sarkar
 qfile.choose <-
     function(caption = "", dir = "", filter = "",
              allow.new = FALSE,
@@ -63,67 +72,51 @@ qgetInteger <-
              maxValue = .Machine$integer.max,
              step = 1L, parent = NULL)
 {
-    stop("Not fixed -- easy")
-    ## .Call(qt_qgetInteger,
-    ##       as.character(title)[1],
-    ##       as.character(label)[1],
-    ##       as.integer(value)[1],
-    ##       as.integer(minValue)[1], as.integer(maxValue)[1],
-    ##       as.integer(step)[1],
-    ##       if (is(parent, "QWidget")) parent else NULL)
+    FUN <- Qt$QInputDialog$getInt
+    ans <- FUN(parent,
+               as.character(title),
+               as.character(label),
+               as.integer(value),
+               as.integer(minValue),
+               as.integer(maxValue),
+               as.integer(step))
+    ans
 }
 
 qgetText <-
     function(title = "Choose value", label = "Enter a text string",
-             text = "", parent = NULL)
+             text = "",
+             echomode = c("normal", "noecho", "password", "echoonedit"),
+             parent = NULL)
 {
-    stop("Not fixed -- easy")
-    ## .Call(qt_qgetText,
-    ##       as.character(title)[1],
-    ##       as.character(label)[1],
-    ##       as.character(text)[1], 
-    ##       if (is(parent, "QWidget")) parent else NULL)
+    echomode <- match.arg(echomode)
+    emode <- c("normal" = 0L, "noecho" = 1L, "password" = 2L, "echoonedit" = 3L)[echomode]
+    FUN <- Qt$QInputDialog$getText
+    ans <- FUN(parent,
+               as.character(title),
+               as.character(label),
+               emode,
+               as.character(text))
+    ans
 }
 
+## getItem ( QWidget * parent, const QString & title, const QString &
+##          label, const QStringList & items, int current = 0, bool
+##          editable = true, bool * ok = 0, Qt::WindowFlags flags = 0 )
 
-##
-
-
-qexport <- function(x, ...)
+qgetItem <-
+    function(title = "Choose value", label = "Choose a list item",
+             items = "",
+             current = 1L, editable = TRUE,
+             parent = NULL)
 {
-    stop("Not updated yet")
-    ## UseMethod("qexport")
-}
-
-
-qexport.QWidget <-
-    function(x,
-             file = qfile.choose(caption = "Choose output file",
-                                 allow.new = TRUE, parent = x),
-             type, ...)
-{
-    file <- as.character(file)
-    stopifnot(length(file) == 1)
-    if (nzchar(file)) ## file=="" if selection cancelled
-    {
-        extension <- tail(strsplit(basename(file), ".", fixed = TRUE)[[1]], 1)
-        if (missing(type))
-            type <-
-                if (tolower(extension) %in% c("ps", "pdf")) "vector"
-                else if (tolower(extension) %in% "svg") "svg"
-                else "raster"
-        switch(type,
-               svg = qrenderToSVG(x, file),
-               raster = qrenderToPixmap(x, file),
-               vector = qrender(x, file))
-        invisible()
-    }
-}
-
-## FIXME: make this accept a file argument
-qexport.QGraphicsView <-
-    function(x, ...)
-{
-    qrenderGraphicsView(x)
+    FUN <- Qt$QInputDialog$getItem
+    ans <- FUN(parent,
+               as.character(title),
+               as.character(label),
+               items,
+               as.integer(current - 1L),
+               as.logical(editable))
+    ans
 }
 

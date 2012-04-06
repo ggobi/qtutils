@@ -1,4 +1,4 @@
-
+## Needs wholesale rewrite
 
 ## eventually a graphical data import function.  We don't have all the
 ## pieces yet, but will try out some ideas.

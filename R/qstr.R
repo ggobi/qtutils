@@ -125,7 +125,7 @@ qstr.listOrEnv <- function(x, ...)
         replAct$setShortcutContext(Qt$Qt$WidgetShortcut)
         replAct$setShortcut(Qt$QKeySequence("Ctrl+Return"))
         replHandler <- function(checked) {
-            qrepl(x, ...)$show()
+            qreplu(x, ...)$show()
         }
         qconnect(replAct, signal = "triggered", handler = replHandler)
         wlist$addAction(replAct)

@@ -1,27 +1,29 @@
 
 import(qtbase)
-## import(qtgui)
 
 useDynLib(qtutils, .registration = TRUE)
 
 export(qfile.choose, qdir.choose, qgetColor,
        qgetDouble, qgetInteger, qgetText)
 
-export(qexport, qhelp, qeditor, qselectedText, qrepl)
+export(qwebbrowser, qeditor, qrepl, qreplu)
 
-export(qsceneDevice, QT, exportToFile)
+export(qsceneDevice, QT)
 
-S3method(qselectedText, QTextEdit)
+## exportToFile
 
+export(qexport)
 S3method(qexport, QWidget)
+S3method(qexport, QGraphicsScene)
 S3method(qexport, QGraphicsView)
 
 
-export(qsetItem, qsetHeaderLabels)
-
-export(qaddItem.QListWidget)
-
+## S3method(qselectedText, QTextEdit)
+## export(qsetItem, qsetHeaderLabels, qselectedText)
+## export(qaddItem.QListWidget)
 ## S3method(qaddItem, QListWidget)
+
+
 
 export(qdataview, qstr, qrecover, qbrowser)
 

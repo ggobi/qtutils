@@ -16,10 +16,12 @@
 ##' @param family Default font family.
 ##' @param rscene A QGraphicsScene instance.  If missing, a new
 ##' instance will be created.
+##' 
 ##' @return A QGraphicsScene instance (same as the \code{rscene}
 ##' argument).  Drawing operations will result in QGraphicsItems being
 ##' added to the scene.  Note that unlike common R graphics devices,
 ##' the return value is nontrivial.
+##' 
 ##' @author Deepayan Sarkar
 qsceneDevice <-
     function(width = 10, height = 10, pointsize = 12, family = "",
@@ -149,55 +151,26 @@ addImageExportAction <- function(gview)
         qconnect(action, signal = "triggered",
                  handler = function(checked, user.data) {
                      saveAsImage(gview, user.data)
-                 }, user.data = fmt)
+                 }, user.data = force(fmt))
         saveAsMenu$addAction(action)
     }
     saveAsAct <- saveAsMenu$menuAction()
     gview$addAction(saveAsAct)
 }
 
-## May want to do something for printing as well, and maybe also PDF
-## export to file with custom width/height and margins.  Direct export
-## to PDF (like copy2pdf) could definitely be useful.
-
-
-saveAsImage <- function(gview, fmt, full = TRUE)
+saveAsImage <- function(gview, format, full = TRUE)
 {
-    initialPath <- file.path(getwd(), paste("untitled.", tolower(fmt), sep = ""))
+    initialPath <- file.path(getwd(), paste("untitled.", tolower(format), sep = ""))
     fileName <-
         Qt$QFileDialog$getSaveFileName(gview, "Save As",
                                        initialPath,
                                        sprintf("%s Files (*.%s);;All Files (*)",
-                                               toupper(fmt),
-                                               toupper(fmt)))
+                                               toupper(format),
+                                               toupper(format)))
     if (!is.null(fileName)) {
-        exportToFile(gview, fileName, fmt = fmt, full = full)
+        qexport(gview, file = fileName, format = format, full = full)
     }
 }
 
-
-## This function is exported, and can be useful for any view
-exportToFile <-
-    function(gview, fileName,
-             fmt = tail(strsplit(basename(fileName), ".", fixed = TRUE)[[1]], 1),
-             full = FALSE)
-{
-        size <-
-            if (full) gview$sceneRect$size()
-            else gview$size
-        qimg <- Qt$QImage(size$toSize(), Qt$QImage$Format_ARGB32_Premultiplied)
-        qimg$fill(0L) ## FIXME: need color to uint conversion
-        painter <- Qt$QPainter()
-        painter
-        painter$begin(qimg)
-        painter$setRenderHint(Qt$QPainter$Antialiasing)
-        painter$setRenderHint(Qt$QPainter$TextAntialiasing)
-        if (full)
-            gview$scene()$render(painter)
-        else
-            gview$render(painter)
-        painter$end()
-        qimg$save(fileName, toupper(fmt))
-}
 
 

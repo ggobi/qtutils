@@ -1,6 +1,4 @@
-
-data.browse <-
-    function(all = TRUE)
+data.browse <- function(all = TRUE)
 {
     available <-
         if (all) data(package = .packages(all.available = TRUE))

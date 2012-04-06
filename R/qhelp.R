@@ -1,22 +1,20 @@
 
-## need to support new server based help system
-
-qhelp <- function(..., htmlhelp = TRUE)
+##' .. content for \description{} (no empty lines) ..
+##'
+##' .. content for \details{} ..
+##' @title A Qt web browser widget
+##' @param x The URL to view.
+##' @param ... Ignored.
+##' @return A QWebView instance
+##' @author Deepayan Sarkar
+qwebbrowser <- function(x, ...)
 {
-    .Deprecated("none")
-    oc <- match.call()
-    oc[[1]] <- quote(utils::help)
-    oc$htmlhelp <- htmlhelp
-    hfile <- eval(oc)
-    str(hfile)
-    if (length(hfile) == 1)
-    {
-        if (htmlhelp)
-            qwebView(hfile)
-        else
-            qtextBrowser(hfile)
-    }
-    else message("No appropriate help file found.")
+    ## str(list(x = x, ...))
+    w <- Qt$QWebView()
+    w$load(Qt$QUrl(x))
+    w$show()
+    w
 }
+
 
 
