@@ -134,7 +134,8 @@ QT <- function(..., antialias = TRUE, opengl = FALSE)
 
     if (opengl)
       gview$setViewport(Qt$QGLWidget())
-    
+
+    gview$setWindowTitle("[ACTIVE] QGraphicsView (QGraphicsScene) Device")
     ## Return view widget
     gview
 }

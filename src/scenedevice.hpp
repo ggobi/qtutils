@@ -20,7 +20,7 @@ class RSceneDevice
  private:
 
     bool debug;
-    bool force_repaint; // force view repaint after each piece is drawn
+    bool force_repaint; // force view repaint after each piece is drawn?
     double zclip;
     double zitem;
     int device_number;
@@ -57,10 +57,15 @@ class RSceneDevice
 		  R_GE_gcontext *gc);
     void NewPage(R_GE_gcontext *gc);
     void Mode(int mode);
+    void Activate();
+    void Deactivate();
+    void Close();
     void MetricInfo(int c, R_GE_gcontext *gc,
 		    double* ascent, double* descent,
 		    double* width);
     double StrWidthUTF8(char *str, R_GE_gcontext *gc);
+
+    void ConfirmNewFrame();
 
 };
 

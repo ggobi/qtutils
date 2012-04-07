@@ -12,10 +12,10 @@ export(qsceneDevice, QT)
 
 ## exportToFile
 
-export(qexport)
-S3method(qexport, QWidget)
-S3method(qexport, QGraphicsScene)
-S3method(qexport, QGraphicsView)
+## export(qexport)
+## S3method(qexport, QWidget)
+## S3method(qexport, QGraphicsScene)
+## S3method(qexport, QGraphicsView)
 
 
 ## S3method(qselectedText, QTextEdit)

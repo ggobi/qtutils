@@ -3,6 +3,7 @@
 #include <QGraphicsView>
 #include <QGraphicsTextItem>
 #include <QFontMetricsF>
+#include <QMessageBox>
 
 #include <qtbase.h>
 #include "devhelpers.hpp"
@@ -144,6 +145,13 @@ RSceneDevice::RSceneDevice(double width, double height,
     clip_rect = _scene->addRect(scene->sceneRect());
     do_QTScene(width, height, pointsize, this);
 }
+
+// RSceneDevice::~RSceneDevice()
+// {
+//     delete _scene;
+//     delete clip_rect;
+// }
+
 
 void RSceneDevice::setClipping(pDevDesc dev)
 {
@@ -393,6 +401,7 @@ RSceneDevice::NewPage(R_GE_gcontext *gc)
 	viewlist[i]->repaint();
     }
     QApplication::processEvents();
+    // FIXME: save snapshots if activated?
     scene()->clear();
     zclip = 0.0;
     zitem = 0.0;
@@ -405,6 +414,29 @@ RSceneDevice::NewPage(R_GE_gcontext *gc)
     }
     return;
 }
+
+void 
+RSceneDevice::ConfirmNewFrame()
+{
+    int i;
+    QList<QGraphicsView *> viewlist = scene()->views();
+    if (viewlist.size() == 0) return; // no view
+    else if (viewlist.size() == 1) {
+	viewlist[i]->setWindowTitle(QString("Press Enter to confirm next page"));
+	QMessageBox msgBox;
+	msgBox.setText("Confirm next page.");
+	msgBox.exec();
+	viewlist[i]->setWindowTitle(QString("[ACTIVE] QGraphicsView (QGraphicsScene) Device"));
+    }
+    else {
+	// Don't bother with title changes
+	QMessageBox msgBox;
+	msgBox.setText("Confirm next page.");
+	msgBox.exec();
+    }
+}
+
+
 
 void 
 RSceneDevice::Mode(int mode)
@@ -427,6 +459,43 @@ RSceneDevice::Mode(int mode)
 	}
     }
 }
+
+
+void 
+RSceneDevice::Activate()
+{
+    QList<QGraphicsView *> viewlist = scene()->views();
+    for (int i = 0; i < viewlist.size(); i++) {
+	viewlist[i]->setWindowTitle(QString("[ACTIVE] QGraphicsView (QGraphicsScene) Device"));
+    }
+    QApplication::processEvents();
+}
+
+void 
+RSceneDevice::Deactivate()
+{
+    QList<QGraphicsView *> viewlist = scene()->views();
+    for (int i = 0; i < viewlist.size(); i++) {
+	viewlist[i]->setWindowTitle(QString("[inactive] QGraphicsView (QGraphicsScene) Device"));
+    }
+    QApplication::processEvents();
+}
+
+void 
+RSceneDevice::Close()
+{
+    scene()->clear();
+    QList<QGraphicsView *> viewlist = scene()->views();
+    for (int i = 0; i < viewlist.size(); i++) {
+	// viewlist[i]->close();
+	delete viewlist[i];
+    }
+    delete scene(); // _scene;
+    // delete clip_rect;
+    QApplication::processEvents();
+}
+
+
 
 
 // FIXME: doesn't work for some plotmath things at least (e.g. \sum)
@@ -559,18 +628,19 @@ QT_StrWidthUTF8(char *str, R_GE_gcontext *gc,
 
 static void QT_Close(pDevDesc dev)
 {
-    return;
+    asSceneDevice(dev)->Close();
+    delete asSceneDevice(dev); // Need this?
 }
 
 
 static void QT_Activate(pDevDesc dev)
 {
-    return;
+    return asSceneDevice(dev)->Activate();
 }
 
 static void QT_Deactivate(pDevDesc dev)
 {
-    return;
+    return asSceneDevice(dev)->Deactivate();
 }
 
 static void QT_Clip(double left, 
@@ -599,24 +669,32 @@ static Rboolean QT_Locator(double *x, double *y, pDevDesc dev)
     return FALSE;
 }
 
-
-// FIXME: not OK
-static void QT_Size(double *left, double *right,
-		    double *bottom, double *top,
-		    pDevDesc dev)
+static Rboolean QT_NewFrameConfirm(pDevDesc dev)
 {
-    // FIXME FIXME FIXME : should I do this here?
-    dev->left = 0;
-    dev->right = asSceneDevice(dev)->scene()->width();
-    dev->bottom = asSceneDevice(dev)->scene()->height();
-    dev->top = 0;
-    // Rprintf("Someone called QT_Size\n");
-    *left = 0.0;
-    *right = asSceneDevice(dev)->scene()->width();
-    *bottom = asSceneDevice(dev)->scene()->height();
-    *top = 0.0;
-    return;
+    Rprintf("Confirm new page\n");
+    asSceneDevice(dev)->ConfirmNewFrame();
+    return TRUE; 
 }
+
+
+
+// // FIXME: not OK
+// static void QT_Size(double *left, double *right,
+// 		    double *bottom, double *top,
+// 		    pDevDesc dev)
+// {
+//     // FIXME FIXME FIXME : should I do this here?
+//     dev->left = 0;
+//     dev->right = asSceneDevice(dev)->scene()->width();
+//     dev->bottom = asSceneDevice(dev)->scene()->height();
+//     dev->top = 0;
+//     // Rprintf("Someone called QT_Size\n");
+//     *left = 0.0;
+//     *right = asSceneDevice(dev)->scene()->width();
+//     *bottom = asSceneDevice(dev)->scene()->height();
+//     *top = 0.0;
+//     return;
+// }
 
 
 
@@ -660,7 +738,7 @@ RSceneDeviceDriver(pDevDesc dev,
     /*
      * Device capabilities
      */
-    dev->canClip = FALSE; // can clip, but then selection becomes weird
+    dev->canClip = FALSE; // FIXME. can clip, but then selection becomes weird
     dev->canHAdj = 2;
     dev->canChangeGamma = FALSE;
     dev->displayListOn = TRUE;
@@ -670,6 +748,12 @@ RSceneDeviceDriver(pDevDesc dev,
     dev->strWidthUTF8 = (double (*)()) QT_StrWidthUTF8;
     dev->wantSymbolUTF8 = TRUE;
     dev->useRotatedTextInContour = TRUE;
+
+    dev->haveTransparency = 2;
+    dev->haveTransparentBg = 2; // FIXME. Do we really? Check.
+    dev->haveRaster = 1;
+    dev->haveCapture = 1;
+    dev->haveLocator = 1;
 
     /*
      * Mouse events
@@ -681,6 +765,9 @@ RSceneDeviceDriver(pDevDesc dev,
 
     // gettingEvent; This is set while getGraphicsEvent is actively
     // looking for events
+
+
+
 
     /*
      * Device functions
@@ -698,12 +785,12 @@ RSceneDeviceDriver(pDevDesc dev,
     dev->polygon =     (void (*)()) QT_Polygon;
     dev->polyline =    (void (*)()) QT_Polyline;
     dev->rect =        (void (*)()) QT_Rect;
-    dev->size =        (void (*)()) QT_Size;
+    dev->size =        NULL; // (void (*)()) QT_Size;
     // dev->strWidth =  (double (*)()) QT_StrWidth;
     // dev->text =        (void (*)()) QT_Text;
     // dev->onexit =      (void (*)()) QT_OnExit; NULL is OK
     // dev->getEvent = SEXP (*getEvent)(SEXP, const char *);
-    // dev->newFrameConfirm
+    dev->newFrameConfirm = (Rboolean (*)()) QT_NewFrameConfirm;
     // dev->
     return TRUE;
 }
