@@ -136,6 +136,7 @@ RSceneDevice::RSceneDevice(double width, double height,
     _scene = scene;
     _scene->setItemIndexMethod(QGraphicsScene::NoIndex);
     debug = false;
+    waitingForFrameConfirm = false;
     force_repaint = false;
     zclip = 0.0;
     zitem = 0.0;
@@ -180,8 +181,6 @@ void RSceneDevice::addClippedItem(QGraphicsItem *item)
     zitem += 0.1;
 }
 
-
-
 // typedef struct {
 //     /*
 //      * Colours
@@ -209,12 +208,7 @@ void RSceneDevice::addClippedItem(QGraphicsItem *item)
 //     char fontfamily[201]; /* Font family */
 // } R_GE_gcontext;
 
-
-
-
 // device 'callbacks'
-
-
 
 void 
 RSceneDevice::Circle(double x, double y, double r,
@@ -423,10 +417,21 @@ RSceneDevice::ConfirmNewFrame()
     if (viewlist.size() == 0) return; // no view
     else if (viewlist.size() == 1) {
 	viewlist[i]->setWindowTitle(QString("Press Enter to confirm next page"));
-	QMessageBox msgBox;
-	msgBox.setText("Confirm next page.");
-	msgBox.exec();
-	viewlist[i]->setWindowTitle(QString("[ACTIVE] QGraphicsView (QGraphicsScene) Device"));
+	// QMessageBox msgBox;
+	// // msgBox.setWindowFlags(Qt::Popup);
+	// msgBox.setText("Confirm next page.");
+	// msgBox.exec();
+	// viewlist[i]->setWindowTitle(QString("[ACTIVE] QGraphicsScene(View) Device"));
+
+	// newframeTimer->start();
+	waitingForFrameConfirm = true;
+	viewlist[i]->setInteractive(true);
+	// connect(newframeTimer, SIGNAL(timeout()), this, SLOT(CheckFrameConfirm()));
+	while (waitingForFrameConfirm) {
+	    QApplication::processEvents();
+	}
+	viewlist[i]->setInteractive(false);	
+
     }
     else {
 	// Don't bother with title changes
@@ -466,7 +471,7 @@ RSceneDevice::Activate()
 {
     QList<QGraphicsView *> viewlist = scene()->views();
     for (int i = 0; i < viewlist.size(); i++) {
-	viewlist[i]->setWindowTitle(QString("[ACTIVE] QGraphicsView (QGraphicsScene) Device"));
+	viewlist[i]->setWindowTitle(QString("[ACTIVE] QGraphicsScene(View) Device"));
     }
     QApplication::processEvents();
 }
@@ -476,7 +481,7 @@ RSceneDevice::Deactivate()
 {
     QList<QGraphicsView *> viewlist = scene()->views();
     for (int i = 0; i < viewlist.size(); i++) {
-	viewlist[i]->setWindowTitle(QString("[inactive] QGraphicsView (QGraphicsScene) Device"));
+	viewlist[i]->setWindowTitle(QString("[inactive] QGraphicsScene(View) Device"));
     }
     QApplication::processEvents();
 }
@@ -485,13 +490,7 @@ void
 RSceneDevice::Close()
 {
     scene()->clear();
-    QList<QGraphicsView *> viewlist = scene()->views();
-    for (int i = 0; i < viewlist.size(); i++) {
-	// viewlist[i]->close();
-	delete viewlist[i];
-    }
     delete scene(); // _scene;
-    // delete clip_rect;
     QApplication::processEvents();
 }
 

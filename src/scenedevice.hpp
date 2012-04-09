@@ -14,6 +14,17 @@
 #include <R_ext/GraphicsDevice.h>
 
 
+
+class GraphicsSceneWithEventHandlers : public QGraphicsScene
+{
+    Q_OBJECT
+
+    
+
+}
+
+
+
 class RSceneDevice
 {
 
@@ -27,6 +38,8 @@ class RSceneDevice
     QString default_family;
     QGraphicsRectItem *clip_rect;
     QGraphicsScene *_scene;
+    bool waitingForFrameConfirm;
+    QTimer *newframeTimer;
 
  public:
 
@@ -66,6 +79,10 @@ class RSceneDevice
     double StrWidthUTF8(char *str, R_GE_gcontext *gc);
 
     void ConfirmNewFrame();
+
+public slots:
+
+    void CheckFrameConfirm();
 
 };
 
