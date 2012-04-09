@@ -4,6 +4,7 @@
 #include <QGraphicsTextItem>
 #include <QFontMetricsF>
 #include <QMessageBox>
+#include <QKeyEvent>
 
 #include <qtbase.h>
 #include "devhelpers.hpp"
@@ -22,8 +23,8 @@ SEXP
 qt_qsceneDevice(SEXP width,
 		SEXP height,
 		SEXP pointsize,
-		SEXP family,
-		SEXP rscene);
+		SEXP family);
+// SEXP rscene);
 
 // SEXP 
 // qt_qsetScene(SEXP rview, SEXP rscene);
@@ -53,8 +54,8 @@ static
 RSceneDevice *startdev(double width,
 		       double height,
 		       double pointsize,
-		       const char *family,
-		       QGraphicsScene *scene);
+		       const char *family); 
+// GraphicsSceneWithEvents *scene);
 
 
 static void
@@ -67,15 +68,16 @@ SEXP
 qt_qsceneDevice(SEXP width,
 		SEXP height,
 		SEXP pointsize,
-		SEXP family,
-		SEXP rscene)
+		SEXP family)
+// SEXP rscene)
 {
-    startdev(asReal(width), 
-	     asReal(height), 
-	     asReal(pointsize), 
-	     CHAR(asChar(family)),
-	     unwrapSmoke(rscene, QGraphicsScene));
-    return R_NilValue; // or external pointer?
+    RSceneDevice *dev = startdev(asReal(width), 
+				 asReal(height), 
+				 asReal(pointsize), 
+				 CHAR(asChar(family)));
+    // unwrapSmoke(rscene, QGraphicsScene));
+    // return R_NilValue; // or external pointer?
+    return wrapSmoke(dev->scene(), QGraphicsScene, true);
 }
 
 
@@ -105,9 +107,10 @@ static
 RSceneDevice *startdev(double width,
 		       double height,
 		       double pointsize,
-		       const char *family, 
-		       QGraphicsScene *scene)
+		       const char *family)
+// GraphicsSceneWithEvents *scene)
 {
+    GraphicsSceneWithEvents *scene = new GraphicsSceneWithEvents();
     RSceneDevice *dev = new RSceneDevice(width * 72, height * 72, 
 					 pointsize, family, scene);
     return dev;
@@ -131,12 +134,11 @@ do_QTScene(double width,
 RSceneDevice::RSceneDevice(double width, double height,
 			   double pointsize, 
 			   const char *family,
-			   QGraphicsScene *scene)
+			   GraphicsSceneWithEvents *scene)
 {
     _scene = scene;
     _scene->setItemIndexMethod(QGraphicsScene::NoIndex);
     debug = false;
-    waitingForFrameConfirm = false;
     force_repaint = false;
     zclip = 0.0;
     zitem = 0.0;
@@ -412,31 +414,38 @@ RSceneDevice::NewPage(R_GE_gcontext *gc)
 void 
 RSceneDevice::ConfirmNewFrame()
 {
-    int i;
     QList<QGraphicsView *> viewlist = scene()->views();
     if (viewlist.size() == 0) return; // no view
     else if (viewlist.size() == 1) {
-	viewlist[i]->setWindowTitle(QString("Press Enter to confirm next page"));
-	// QMessageBox msgBox;
-	// // msgBox.setWindowFlags(Qt::Popup);
-	// msgBox.setText("Confirm next page.");
-	// msgBox.exec();
-	// viewlist[i]->setWindowTitle(QString("[ACTIVE] QGraphicsScene(View) Device"));
-
-	// newframeTimer->start();
-	waitingForFrameConfirm = true;
-	viewlist[i]->setInteractive(true);
-	// connect(newframeTimer, SIGNAL(timeout()), this, SLOT(CheckFrameConfirm()));
-	while (waitingForFrameConfirm) {
-	    QApplication::processEvents();
+	viewlist[0]->setWindowTitle(QString("Press Enter to see next page"));
+	viewlist[0]->setInteractive(true);
+	viewlist[0]->activateWindow();
+	viewlist[0]->setFocus();
+	bool done = false;
+	QKeyEvent *kevent;
+	while (!done) {
+	    scene()->resetLastKeyEvent();
+	    scene()->setWantKeyboardInput(true);
+	    while (scene()->wantKeyboardInput()) {
+		// To avoid 100% CPU usage, can we portably sleep for a bit here?
+		R_CheckUserInterrupt();
+		QApplication::processEvents();
+	    }
+	    kevent = scene()->lastKeyEvent;
+	    if ((kevent->type() == QEvent::KeyPress) &&
+		((kevent->key() == Qt::Key_Return) || (kevent->key() == Qt::Key_Enter))) {
+		// if (key->key() & (Qt::Key_Return | Qt::Key_Enter)) {
+		done = true;
+	    }
 	}
-	viewlist[i]->setInteractive(false);	
-
+	viewlist[0]->setInteractive(false);
+	viewlist[0]->setWindowTitle(QString("[ACTIVE] QGraphicsScene(View) Device"));
     }
     else {
 	// Don't bother with title changes
 	QMessageBox msgBox;
 	msgBox.setText("Confirm next page.");
+	// msgBox.setWindowFlags(Qt::Popup);
 	msgBox.exec();
     }
 }
@@ -670,7 +679,7 @@ static Rboolean QT_Locator(double *x, double *y, pDevDesc dev)
 
 static Rboolean QT_NewFrameConfirm(pDevDesc dev)
 {
-    Rprintf("Confirm new page\n");
+    // Rprintf("Confirm new page\n");
     asSceneDevice(dev)->ConfirmNewFrame();
     return TRUE; 
 }

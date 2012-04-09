@@ -14,8 +14,6 @@
 ##' @param height Height of the scene in inches, assuming 72 pixels per inch.
 ##' @param pointsize Default pointsize.
 ##' @param family Default font family.
-##' @param rscene A QGraphicsScene instance.  If missing, a new
-##' instance will be created.
 ##' 
 ##' @return A QGraphicsScene instance (same as the \code{rscene}
 ##' argument).  Drawing operations will result in QGraphicsItems being
@@ -24,17 +22,19 @@
 ##' 
 ##' @author Deepayan Sarkar
 qsceneDevice <-
-    function(width = 10, height = 10, pointsize = 12, family = "",
-             rscene = Qt$QGraphicsScene())
+    function(width = 10, height = 10, pointsize = 12, family = "")
+    ## , rscene = Qt$QGraphicsScene()
+    ##  @param rscene A QGraphicsScene instance.  If missing, a new
+    ##                instance will be created.
 {
-    force(rscene)
+    ## force(rscene)
     .Call(qt_qsceneDevice,
           as.numeric(width),
           as.numeric(height),
           as.numeric(pointsize),
-          as.character(family),
-          rscene)
-    invisible(rscene)
+          as.character(family))
+    ## rscene)
+    ## invisible(rscene)
 }
 
 ##' Convenience wrapper for the \code{\link{qsceneDevice}} graphics device.
@@ -50,7 +50,11 @@ qsceneDevice <-
 ##' 
 ##' @title QT
 ##' 
-##' @param ... Arguments passed on to \code{\link{qsceneDevice}}.
+##' @param rscene A QGraphicsScene instance produced by a call to
+##' \code{\link{qsceneDevice}}.  Can be missing, in which case a
+##' suitable instance will be created (see \code{\dots} below).
+##' @param ... Arguments passed on to \code{\link{qsceneDevice}} if
+##' \code{rscene} is missing.
 ##' @param antialias Logical flag.  Specifies whether the view should
 ##' be antialiased.
 ##' @param opengl Logical flag.  Specifies whether the view should be
@@ -59,9 +63,9 @@ qsceneDevice <-
 ##' @return A QGraphicsView instance
 ##' 
 ##' @author Deepayan Sarkar
-QT <- function(..., antialias = TRUE, opengl = FALSE)
+QT <- function(rscene, ..., antialias = TRUE, opengl = FALSE)
 {
-    rscene <- qsceneDevice(...)
+    if (missing(rscene)) rscene <- qsceneDevice(...)
     gview <- Qt$QGraphicsView(rscene)
     if (antialias) gview$setRenderHints(Qt$QPainter$Antialiasing) 
     gview$setDragMode(Qt$QGraphicsView$ScrollHandDrag)
