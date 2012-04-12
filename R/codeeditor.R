@@ -1,17 +1,32 @@
-require(qtbase)
 
-## Class that subclasses QPlainTextEdit and overrides TAB key
 
-rm(RCodeEditor)
+
+## Class that subclasses QPlainTextEdit and overrides TAB key etc
 
 qsetClass("RCodeEditor", Qt$QPlainTextEdit,
-          constructor = function(family = "monospace", pointsize = 14, underscore.assign = TRUE) {
+          constructor = function(family = "monospace", pointsize = 14,
+                                 underscore.assign = TRUE, comp.tooltip = TRUE) {
               this$setFont(qfont(family = family, pointsize = pointsize))
               this$centerOnScroll <- TRUE
               this$setLineWrapMode(Qt$QTextEdit$NoWrap)
               this$tabMode <- "complete"
               this$uassign <- underscore.assign
+              this$ctooltip <- comp.tooltip
           })
+
+
+
+isblank <- function(s) 
+{
+    # is s composed of only spaces?
+    identical(unique(charToRaw(s)), as.raw(32))
+}
+
+firstNonBlank <- function(s)
+{
+    n <- countLeadingSpaces(s)
+    if (nchar(s) > n) substring(s, n+1, n+1) else ""
+}
 
 
 findLastUnmatched <- function(s)
@@ -127,6 +142,7 @@ qsetMethod("currentDocument", RCodeEditor,
 
 
 qsetMethod("indentCurrentLine", RCodeEditor,
+           ## return: TRUE if something happened, FALSE if nothing to do.
            function() {
                ## how many leading blanks in current line?
                cur <- countLeadingSpaces(currentLine(uptocursor = FALSE))
@@ -135,15 +151,35 @@ qsetMethod("indentCurrentLine", RCodeEditor,
                cc$movePosition(Qt$QTextCursor$StartOfLine, Qt$QTextCursor$MoveAnchor)
                cc$movePosition(Qt$QTextCursor$Start, Qt$QTextCursor$KeepAnchor)
                selText <- cc$selection()$toPlainText()
-               if (is.null(selText) || !nzchar(selText)) return (FALSE) # first line
-               wanted <- computeTabSpaces(cc$selection()$toPlainText())
+               wanted <- 
+                   if (is.null(selText) || !nzchar(selText)) # first line
+                       0L
+                   else
+                       computeTabSpaces(cc$selection()$toPlainText())
+               ## adjust if first non-blank char is } or ) or ]
+               adj <- switch(firstNonBlank(currentLine(uptocursor = FALSE)),
+                             "}" = 4L,
+                             ")" = , "]" = 1L, 0L)
+               wanted <- max(0L, wanted - adj)
                ## base::print(c(cur, wanted))
-               if (wanted == cur) return(FALSE)
+               if (wanted == cur)
+               {
+                   ## if cursor in initial blank space, move it
+                   ## forward. Otherwise nothing to do.
+                   cursorcol <- textCursor()$positionInBlock()
+                   if (cursorcol >= cur)
+                       return(FALSE)
+                   else
+                   {
+                       for (i in seq_len(cur - cursorcol))
+                           moveCursor(Qt$QTextCursor$Right)
+                       return(TRUE)
+                   }
+               }
                cc <- textCursor()
                cc$movePosition(Qt$QTextCursor$StartOfLine, Qt$QTextCursor$MoveAnchor)
                for (i in seq_len(cur)) cc$deleteChar()
                for (i in seq_len(wanted)) cc$insertText(" ")
-
                ## Could have done this instead, but then cursor would not be at indent.
                ## if (wanted > cur)
                ## {
@@ -153,21 +189,22 @@ qsetMethod("indentCurrentLine", RCodeEditor,
                ## {
                ##     for (i in seq_len(cur-wanted)) cc$deleteChar()
                ## }
-
-               ## move cursor forward to first non-blank ()
                return (TRUE)
            })
 
 
-isblank <- function(s) 
-{
-    # is s composed of only spaces?
-    identical(unique(charToRaw(s)), as.raw(32))
-}
+qsetMethod("cursorGlobalPosition", RCodeEditor,
+           function() {
+               cm <- as.matrix(cursorRect())
+               qpoint(geometry$x() + cm[2, 1],
+                      geometry$y() + cm[2, 2])
+           })
 
-
+qsetSignal("completionsAvailable(QString character)", RCodeEditor)
+           
 qsetMethod("keyPressEvent", RCodeEditor,
            function(e) {
+               if (ctooltip && Qt$QToolTip$isVisible()) Qt$QToolTip$hideText()
                if (e$modifiers() == Qt$Qt$ControlModifier)
                {
                    ek <- e$key()
@@ -214,7 +251,22 @@ qsetMethod("keyPressEvent", RCodeEditor,
                {
                    ## TAB mode: complete/indent/indent-then-complete
                    ## we will do only third for now.  Others are easy with flags. 
-                   indentCurrentLine()
+                   if (!indentCurrentLine()) 
+                   {
+                       comps <- tryComplete(currentLine(uptocursor = TRUE))
+                       if (comps$addition == "" && nzchar(comps$comps)) 
+                       {
+                           ## indicate available comps$comps
+                           if (ctooltip)
+                               Qt$QToolTip$showText(cursorGlobalPosition(),
+                                                    base::paste(strwrap(comps$comps, 80),
+                                                                collapse = "\n"),
+                                                    this, this$rect)
+                           else # emit signal
+                               completionsAvailable(comps$comps)
+                       }
+                       else insertPlainText(comps$addition)
+                   }
                }
                else if (uassign && et == "_")
                    insertPlainText(" <- ")
@@ -226,7 +278,8 @@ qsetMethod("keyPressEvent", RCodeEditor,
            })
 
 
-(foo <- RCodeEditor())
 
+## rm(RCodeEditor)
+## (foo <- RCodeEditor())
 
 

@@ -8,6 +8,8 @@ export(qfile.choose, qdir.choose, qgetColor,
 
 export(qwebbrowser, qeditor, qrepl, qreplu)
 
+export(RCodeEditor)
+
 export(qsceneDevice, QT)
 
 ## exportToFile
