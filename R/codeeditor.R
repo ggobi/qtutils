@@ -69,13 +69,30 @@ computeTabSpaces <- function(text)
         linebreaks <- occurencePattern("\n")
         pkey <- c("(", ")", "[", "]", "{", "}")
         poccur <- sapply(pkey, occurencePattern, simplify = FALSE)
-        str(poccur)
+        ## str(poccur)
         ord <- order(unlist(poccur))
         osorted <- rep(pkey, sapply(poccur, length))[ord]
-        print(osorted)
+        ## print(osorted)
         lastUnmatched <- findLastUnmatched(osorted)
-        print("---")
-        print(unlist(poccur)[ord][lastUnmatched])
+        if (lastUnmatched == 0L) return(0) # apparently complete
+        ## what is it and where?
+        posUnmatched <- unlist(poccur)[ord][lastUnmatched]
+        switch(osorted[lastUnmatched],
+               "(" = ,
+               "[" = {
+                   ## indent to that position + 1. To find position, see difference from previous newline
+                   if (any(linebreaks < posUnmatched)) 
+                   {
+                       return(posUnmatched - tail(which(linebreaks < posUnmatched), 1))
+                   }
+                   else return(posUnmatched) # unmatched bracket in first line
+               },
+               "{" = {
+                   ## indent to indent of line containing that { + 4
+                   ## Find line number by counting preceding newlines
+                   linenum <- sum(linebreaks < posUnmatched) + 1L
+                   return(countLeadingSpaces(strsplit(useText[linenum], "")[[1]]) + 4)
+               })
         1
     }
     else # no line starts at beginning 
@@ -85,10 +102,23 @@ computeTabSpaces <- function(text)
 qsetMethod("keyPressEvent", RCodeEditor,
            function(e) {
                et <- e$text()
-               if (et == "\t") 
+               ## base::print(et)
+               if (et == "\r")
+               {
+                   spaces <- computeTabSpaces(document()$toPlainText())
+                   insertPlainText("\n")
+                   insertPlainText(base::paste(rep(" ", spaces), collapse = ""))
+               }
+               else if (et == "{")
+               {
+                   ## go back by 4 if this is the first character of line
+               }
+               else if (et == "\t") 
                {
                    base::print(tabMode)
-                   computeTabSpaces(document()$toPlainText())
+                   spaces <- computeTabSpaces(document()$toPlainText())
+                   base::print(spaces)
+                   insertPlainText(base::paste(rep(" ", spaces), collapse = ""))
                }
                else if (uassign && et == "_")
                    insertPlainText(" <- ")
@@ -97,5 +127,6 @@ qsetMethod("keyPressEvent", RCodeEditor,
 
 
 (foo <- RCodeEditor())
+
 
 
