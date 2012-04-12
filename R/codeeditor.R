@@ -32,26 +32,27 @@ findLastUnmatched <- function(s)
     return (0L)
 }
 
+countLeadingSpaces <- function(x) # x is already split
+{
+    if (length(x) == 1) x <- strsplit(x, "")[[1]]
+    spaces <- (x == " ")
+    if (length(spaces))
+    {
+        nsp <- which(!spaces)
+        if (length(nsp))
+        {
+            nsp[1] - 1L
+        }
+        else length(spaces) # all spaces
+    }
+    else 0
+}
 
 computeTabSpaces <- function(text)
 {
     ## want intended number of spaces for last line.
     ## Assume current call goes back to last line with 0 leading spaces
     ll <- strsplit(text, "\n")[[1]]
-    countLeadingSpaces <- function(x) # x is already split
-    {
-        spaces <- (x == " ")
-        if (length(spaces))
-        {
-            nsp <- which(!spaces)
-            if (length(nsp))
-            {
-                nsp[1] - 1L
-            }
-            else length(spaces) # all spaces
-        }
-        else 0
-    }
     spaces <- sapply(strsplit(ll, ""), countLeadingSpaces)
     goBackTo <- tail(which(spaces == 0), 1)
     if (length(goBackTo))
@@ -80,15 +81,17 @@ computeTabSpaces <- function(text)
         switch(osorted[lastUnmatched],
                "(" = ,
                "[" = {
-                   ## indent to that position + 1. To find position, see difference from previous newline
+                   ## Indent to that position + 1.
+                   ## To find position, see difference from previous newline
                    if (any(linebreaks < posUnmatched)) 
                    {
-                       return(posUnmatched - tail(which(linebreaks < posUnmatched), 1))
+                       return(posUnmatched -
+                              linebreaks[tail(which(linebreaks < posUnmatched), 1)])
                    }
                    else return(posUnmatched) # unmatched bracket in first line
                },
                "{" = {
-                   ## indent to indent of line containing that { + 4
+                   ## Indent to indent of line containing that { + 4
                    ## Find line number by counting preceding newlines
                    linenum <- sum(linebreaks < posUnmatched) + 1L
                    return(countLeadingSpaces(strsplit(useText[linenum], "")[[1]]) + 4)
@@ -99,30 +102,127 @@ computeTabSpaces <- function(text)
         0
 }
 
+
+qsetMethod("currentLine", RCodeEditor,
+           function(uptocursor = TRUE, remove = FALSE) {
+               cc <- textCursor()
+               if (!uptocursor)
+                   cc$movePosition(Qt$QTextCursor$EndOfLine, Qt$QTextCursor$MoveAnchor)
+               cc$movePosition(Qt$QTextCursor$StartOfLine, Qt$QTextCursor$KeepAnchor)
+               ans <- cc$selection()$toPlainText()
+               if (remove) cc$removeSelectedText()
+               ans
+           })
+
+qsetMethod("currentDocument", RCodeEditor,
+           function(uptocursor = TRUE, remove = FALSE) {
+               cc <- textCursor()
+               if (!uptocursor)
+                   cc$movePosition(Qt$QTextCursor$End, Qt$QTextCursor$MoveAnchor)
+               cc$movePosition(Qt$QTextCursor$Start, Qt$QTextCursor$KeepAnchor)
+               ans <- cc$selection()$toPlainText()
+               if (remove) cc$removeSelectedText()
+               ans
+           })
+
+
+qsetMethod("indentCurrentLine", RCodeEditor,
+           function() {
+               ## how many leading blanks in current line?
+               cur <- countLeadingSpaces(currentLine(uptocursor = FALSE))
+               ## how many should it have? Go to beginning and decide
+               cc <- textCursor()
+               cc$movePosition(Qt$QTextCursor$StartOfLine, Qt$QTextCursor$MoveAnchor)
+               cc$movePosition(Qt$QTextCursor$Start, Qt$QTextCursor$KeepAnchor)
+               selText <- cc$selection()$toPlainText()
+               if (is.null(selText) || !nzchar(selText)) return (FALSE) # first line
+               wanted <- computeTabSpaces(cc$selection()$toPlainText())
+               ## base::print(c(cur, wanted))
+               if (wanted == cur) return(FALSE)
+               cc <- textCursor()
+               cc$movePosition(Qt$QTextCursor$StartOfLine, Qt$QTextCursor$MoveAnchor)
+               for (i in seq_len(cur)) cc$deleteChar()
+               for (i in seq_len(wanted)) cc$insertText(" ")
+
+               ## Could have done this instead, but then cursor would not be at indent.
+               ## if (wanted > cur)
+               ## {
+               ##     for (i in seq_len(wanted-cur)) cc$insertText(" ")
+               ## }
+               ## else if (wanted < cur)
+               ## {
+               ##     for (i in seq_len(cur-wanted)) cc$deleteChar()
+               ## }
+
+               ## move cursor forward to first non-blank ()
+               return (TRUE)
+           })
+
+
+isblank <- function(s) 
+{
+    # is s composed of only spaces?
+    identical(unique(charToRaw(s)), as.raw(32))
+}
+
+
 qsetMethod("keyPressEvent", RCodeEditor,
            function(e) {
+               if (e$modifiers() == Qt$Qt$ControlModifier)
+               {
+                   ek <- e$key()
+                   if (ek == Qt$Qt$Key_E) {
+                       moveCursor(Qt$QTextCursor$EndOfLine)
+                       return()
+                   }
+                   else if (ek == Qt$Qt$Key_A) {
+                       moveCursor(Qt$QTextCursor$StartOfLine)
+                       return()
+                   }
+                   else return(super("keyPressEvent", e))
+               }
                et <- e$text()
                ## base::print(et)
-               if (et == "\r")
+               if (et == "\r") # Enter/Return
                {
-                   spaces <- computeTabSpaces(document()$toPlainText())
                    insertPlainText("\n")
+                   ## spaces <- computeTabSpaces(document()$toPlainText())
+                   spaces <- computeTabSpaces(currentDocument(uptocursor = TRUE))
                    insertPlainText(base::paste(rep(" ", spaces), collapse = ""))
                }
-               else if (et == "{")
+               else if (et == "}")
                {
                    ## go back by 4 if this is the first character of line
+                   cl <- currentLine(uptocursor = TRUE)
+                   if (nchar(cl) >= 4 && isblank(cl))
+                   {
+                       for (i in 1:4) textCursor()$deletePreviousChar()
+                   }
+                   insertPlainText(et)
+               }
+               else if (et %in% c(")", "]"))
+               {
+                   ## go back by 4 if this is the first character of line
+                   cl <- currentLine(uptocursor = TRUE)
+                   if (nchar(cl) >= 1 && isblank(cl))
+                   {
+                       textCursor()$deletePreviousChar()
+                   }
+                   insertPlainText(et)
                }
                else if (et == "\t") 
                {
-                   base::print(tabMode)
-                   spaces <- computeTabSpaces(document()$toPlainText())
-                   base::print(spaces)
-                   insertPlainText(base::paste(rep(" ", spaces), collapse = ""))
+                   ## TAB mode: complete/indent/indent-then-complete
+                   ## we will do only third for now.  Others are easy with flags. 
+                   indentCurrentLine()
                }
                else if (uassign && et == "_")
                    insertPlainText(" <- ")
-               else super("keyPressEvent", e)
+               else
+               {
+                   ## base::print(et)
+                   super("keyPressEvent", e)
+               }
            })
 
 
