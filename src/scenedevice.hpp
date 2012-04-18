@@ -40,10 +40,13 @@ private:
     }
     bool handleMouseEvent(QGraphicsSceneMouseEvent *event) {
 	if (_wantMouseInput) {
-	    Rprintf("Mouse event.\n");
-	    Rprintf("...With button %d.\n", event->button());
+	    // Rprintf("Mouse event.\n");
+	    // Rprintf("...With button %d.\n", event->button());
 	    _wantMouseInput = false;
 	    _lastMouseEvent = event;
+	    lastMouseButton = event->button();
+	    lastMousePos = event->scenePos();
+	    lastMouseType = event->type();
 	    return true;
 	}
 	else return false;
@@ -71,6 +74,10 @@ public:
     QGraphicsSceneMouseEvent *lastMouseEvent() { return _lastMouseEvent; }
     void resetLastKeyEvent() { _lastKeyEvent = 0; }
     void resetLastMouseEvent() { _lastMouseEvent = 0; }
+
+    Qt::MouseButton lastMouseButton;
+    QPointF lastMousePos;
+    QEvent::Type lastMouseType;
 
 
 protected:

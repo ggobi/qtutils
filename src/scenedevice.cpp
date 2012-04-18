@@ -468,8 +468,8 @@ RSceneDevice::LocateOnePoint(double *x, double *y)
 	viewlist[0]->setDragMode(QGraphicsView::NoDrag);
 	viewlist[0]->setCursor(Qt::CrossCursor);
 	
-	if (viewlist[0]->hasMouseTracking()) Rprintf("Mouse tracking enabled.\n");
-	else Rprintf("Mouse tracking disabled.\n");
+	// if (viewlist[0]->hasMouseTracking()) Rprintf("Mouse tracking enabled.\n");
+	// else Rprintf("Mouse tracking disabled.\n");
 
 	bool done = false, leftbutton = false;
 	QGraphicsSceneMouseEvent *mevent;
@@ -481,12 +481,13 @@ RSceneDevice::LocateOnePoint(double *x, double *y)
 		R_CheckUserInterrupt();
 		QApplication::processEvents();
 	    }
-	    Rprintf("Got event.\n");
-	    mevent = scene()->lastMouseEvent();
-	    if (mevent == 0) 
-		Rprintf("Got mevent <0>\n", mevent->button());
-	    else 
-		Rprintf("Got mevent %d.\n", mevent->button());
+	    // Rprintf("Got event.\n");
+	    // mevent = scene()->lastMouseEvent();
+	    // if (mevent == 0) 
+	    // 	Rprintf("Got mevent <0>\n", mevent->button());
+	    // else 
+	    // 	Rprintf("Got mevent %d.\n", mevent->button());
+
 	    // if (mevent->button() != Qt::NoButton) {
 	    // 	done = true;
 	    // 	if (mevent->button() == Qt::LeftButton) { // else return false
@@ -497,6 +498,19 @@ RSceneDevice::LocateOnePoint(double *x, double *y)
 	    // 	}
 	    // }
 	    // else Rprintf("NoButton event.\n");
+
+	    QApplication::processEvents();
+	    if (scene()->lastMouseType == QEvent::GraphicsSceneMousePress && scene()->lastMouseButton != Qt::NoButton) {
+	    	done = true;
+	    	if (scene()->lastMouseButton == Qt::LeftButton) { // else return false
+	    	    // Rprintf("LeftButton event.\n");
+	    	    leftbutton = true;
+	    	    *x = (double) scene()->lastMousePos.x();
+	    	    *y = (double) scene()->lastMousePos.y();
+	    	}
+	    }
+	    // else Rprintf("NoButton event.\n");
+
 	}
 	viewlist[0]->setCursor(Qt::ArrowCursor);
 	viewlist[0]->setInteractive(false);
