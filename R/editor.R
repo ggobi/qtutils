@@ -3,6 +3,7 @@ qeditor <-
     function(file = NULL,
              readonly = FALSE,
              richtext = FALSE,
+             ...,
              rsyntax = tail(strsplit(basename(file),
                                      ".", fixed = TRUE)[[1]],
                             1) %in% c("R", "r", "S", "r"))
@@ -16,14 +17,18 @@ qeditor <-
         ## does mode really matter if we just copy the contents and close the file?
         if (!status) return(NULL)
     }
-    edit <- Qt$QTextEdit()
-    if (richtext) edit$setAcceptRichText(TRUE)
+    if (richtext) 
+    {
+        edit <- Qt$QTextEdit()
+        edit$setAcceptRichText(TRUE)
+    }
     else
     {
-        edit$setAcceptRichText(FALSE)
-        ## FIXME: edit$setFont(qfont(family = "monospace"))
-        edit$setFontFamily("monospace")
-	edit$setLineWrapMode(Qt$QTextEdit$NoWrap)
+        edit <- RCodeEditor(...)
+        ## edit$setAcceptRichText(FALSE)
+        ## ## FIXME: edit$setFont(qfont(family = "monospace"))
+        ## edit$setFontFamily("monospace")
+	## edit$setLineWrapMode(Qt$QTextEdit$NoWrap)
     }
     if (rsyntax)
         .Call(qt_qsetRSyntaxHighlighter, edit)

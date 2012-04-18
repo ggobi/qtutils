@@ -74,10 +74,10 @@ qrepl <- function(env = .GlobalEnv,
                   html.preferred = require(xtable))
 {
     ## input1: REPL-like mode, type and execute code
-    ined1 <- qeditor(rsyntax = TRUE, richtext = TRUE)
+    ined1 <- qeditor(rsyntax = TRUE, richtext = FALSE)
     ined1$setCurrentFont(font)
     ## input2: Editor mode, select and execute code.  input1 text gets appended here
-    ined2 <- qeditor(rsyntax = TRUE, richtext = TRUE)
+    ined2 <- qeditor(rsyntax = TRUE, richtext = FALSE)
     ined2$setCurrentFont(font)
     ## output
     outed <- Qt$QTextEdit()
@@ -286,17 +286,20 @@ qrepl <- function(env = .GlobalEnv,
 
 
 qreplu <- function(env = .GlobalEnv,
-                   font = Qt$QFont("monospace"),
+                   ...,
                    incolor = qcolor("red"),
                    outcolor = qcolor("blue"),
-                   errorcolor = qcolor("black"),
-                   messagecolor = qcolor("black"),
-                   html.preferred = FALSE)
+                   messagecolor = qcolor("black"))
 {
     ## ed: REPL-like mode, type and execute code
-    ed <- qeditor(rsyntax = FALSE, richtext = FALSE)
-    ed$setCurrentFont(font)
-
+    ed <- qeditor(richtext = FALSE, rsyntax = FALSE, ..., comp.tooltip = FALSE)
+    informat <- Qt$QTextCharFormat()
+    informat$setForeground(qbrush(incolor))
+    outformat <- Qt$QTextCharFormat()
+    outformat$setForeground(qbrush(outcolor))
+    msgformat <- Qt$QTextCharFormat()
+    msgformat$setForeground(qbrush(messagecolor))
+    
     ## messages
     msg <- Qt$QLabel("")
     msg$wordWrap <- TRUE
@@ -310,10 +313,10 @@ qreplu <- function(env = .GlobalEnv,
 
     ed$setContextMenuPolicy(Qt$Qt$ActionsContextMenu)
 
-    ed$insertHtml("<p>Welcome to qrepl().</p> <br>")
+    ed$appendHtml("<p>Welcome to qrepl().</p> <br>")
 
-    ed$setCurrentFont(font)
-    ed$setTextColor(incolor)
+    ## ed$setCurrentFont(font)
+    ed$setCurrentCharFormat(informat)
     ed$insertPlainText("\n> ")
     ed$moveCursor(Qt$QTextCursor$End)
     lastPosition <- ed$textCursor()$position()
@@ -347,6 +350,10 @@ qreplu <- function(env = .GlobalEnv,
     
     qconnect(ed, "cursorPositionChanged", setReadOnlyMode)
     qconnect(ed, "textChanged", setReadOnlyMode, user.data = TRUE)
+    msgCompletions <- function(comps) {
+        msg$text <- if (nzchar(comps)) comps else "No completions."
+    }
+    qconnect(ed, "completionsAvailable", msgCompletions)
 
     processCodeIfReady <- function()
     {
@@ -402,12 +409,14 @@ qreplu <- function(env = .GlobalEnv,
                 output <- pe[[i]]$output
                 evis <- pe[[i]]$evis
                 ## input
-                ed$setCurrentFont(font)
-                ed$setTextColor(incolor)
+                ## ed$setCurrentFont(font)
+                ## ed$setTextColor(incolor)
+                ed$setCurrentCharFormat(informat)
                 ed$insertPlainText(ein)
                 ed$insertPlainText("\n")
                 ## output
-                ed$setTextColor(outcolor)
+                ## ed$setTextColor(outcolor)
+                ed$setCurrentCharFormat(outformat)
                 ## any captured output (by-product of evaluation)
                 if (length(output))
                     ed$insertPlainText(paste(output, collapse = "\n"))
@@ -415,29 +424,19 @@ qreplu <- function(env = .GlobalEnv,
                 if (inherits(evis, "try-error"))
                 {
                     ed$moveCursor(Qt$QTextCursor$End)
-                    ed$setTextColor(errorcolor)
+                    ## ed$setTextColor(errorcolor)
+                    ed$setCurrentCharFormat(msgformat)
                     ed$insertPlainText(paste(strsplit(as.character(evis), "\n")[[1]],
                                     collapse = "\n")) # remove final newline
                 }
                 else if (evis$visible)
                 {
-                    if (html.preferred &&
-                        !inherits(try(xtab <- xtable(evis$value), silent = TRUE),
-                                  "try-error"))
-                    {
-                        ed$moveCursor(Qt$QTextCursor$End)
-                        html.output <- capture.output(print(xtab, type = "html"))
-                        ## FIXME: need something append-like (add to end)
-                        ed$insertHtml(paste(html.output, collapse = "\n"))
-                    }
-                    else
-                    {
-                        text.output <- capture.output(evis$value)
-                        ed$insertPlainText(paste(text.output, collapse = "\n"))
-                    }
+                    text.output <- capture.output(evis$value)
+                    ed$insertPlainText(paste(text.output, collapse = "\n"))
                 }
             }
-            ed$setTextColor(incolor)
+            ## ed$setTextColor(incolor)
+            ed$setCurrentCharFormat(informat)
             ed$insertPlainText("\n> ")
             ed$moveCursor(Qt$QTextCursor$End)
             lastPosition <<- ed$textCursor()$position()

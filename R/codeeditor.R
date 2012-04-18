@@ -124,9 +124,9 @@ qsetMethod("currentLine", RCodeEditor,
                if (!uptocursor)
                    cc$movePosition(Qt$QTextCursor$EndOfLine, Qt$QTextCursor$MoveAnchor)
                cc$movePosition(Qt$QTextCursor$StartOfLine, Qt$QTextCursor$KeepAnchor)
-               ans <- cc$selection()$toPlainText()
+               ans <- cc$selection()$toPlainText() # can be NULL
                if (remove) cc$removeSelectedText()
-               ans
+               if (is.null(ans)) "" else ans
            })
 
 qsetMethod("currentDocument", RCodeEditor,
@@ -137,7 +137,7 @@ qsetMethod("currentDocument", RCodeEditor,
                cc$movePosition(Qt$QTextCursor$Start, Qt$QTextCursor$KeepAnchor)
                ans <- cc$selection()$toPlainText()
                if (remove) cc$removeSelectedText()
-               ans
+               if (is.null(ans)) "" else ans
            })
 
 
