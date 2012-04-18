@@ -5,6 +5,7 @@
 #include <QFontMetricsF>
 #include <QMessageBox>
 #include <QKeyEvent>
+#include <QGraphicsSceneMouseEvent>
 
 #include <qtbase.h>
 #include "devhelpers.hpp"
@@ -427,11 +428,11 @@ RSceneDevice::ConfirmNewFrame()
 	    scene()->resetLastKeyEvent();
 	    scene()->setWantKeyboardInput(true);
 	    while (scene()->wantKeyboardInput()) {
-		// To avoid 100% CPU usage, can we portably sleep for a bit here?
+		// FIXME: To avoid 100% CPU usage, can we portably sleep for a bit here?
 		R_CheckUserInterrupt();
 		QApplication::processEvents();
 	    }
-	    kevent = scene()->lastKeyEvent;
+	    kevent = scene()->lastKeyEvent();
 	    if ((kevent->type() == QEvent::KeyPress) &&
 		((kevent->key() == Qt::Key_Return) || (kevent->key() == Qt::Key_Enter))) {
 		// if (key->key() & (Qt::Key_Return | Qt::Key_Enter)) {
@@ -448,6 +449,65 @@ RSceneDevice::ConfirmNewFrame()
 	// msgBox.setWindowFlags(Qt::Popup);
 	msgBox.exec();
     }
+}
+
+
+bool 
+RSceneDevice::LocateOnePoint(double *x, double *y)
+{
+    QList<QGraphicsView *> viewlist = scene()->views();
+    QApplication::processEvents();
+    *x = 100;
+    *y = 100;
+    if (viewlist.size() == 0) return false; // no view
+    else if (viewlist.size() == 1) {
+	viewlist[0]->setWindowTitle(QString("Click inside the device window"));
+	viewlist[0]->setInteractive(true);
+	viewlist[0]->activateWindow();
+	viewlist[0]->setFocus();
+	viewlist[0]->setDragMode(QGraphicsView::NoDrag);
+	viewlist[0]->setCursor(Qt::CrossCursor);
+	
+	if (viewlist[0]->hasMouseTracking()) Rprintf("Mouse tracking enabled.\n");
+	else Rprintf("Mouse tracking disabled.\n");
+
+	bool done = false, leftbutton = false;
+	QGraphicsSceneMouseEvent *mevent;
+	while (!done) {
+	    scene()->resetLastMouseEvent();
+	    scene()->setWantMouseInput(true);
+	    while (scene()->wantMouseInput()) {
+		// To avoid 100% CPU usage, can we portably sleep for a bit here?
+		R_CheckUserInterrupt();
+		QApplication::processEvents();
+	    }
+	    Rprintf("Got event.\n");
+	    mevent = scene()->lastMouseEvent();
+	    if (mevent == 0) 
+		Rprintf("Got mevent <0>\n", mevent->button());
+	    else 
+		Rprintf("Got mevent %d.\n", mevent->button());
+	    // if (mevent->button() != Qt::NoButton) {
+	    // 	done = true;
+	    // 	if (mevent->button() == Qt::LeftButton) { // else return false
+	    // 	    Rprintf("LeftButton event.\n");
+	    // 	    leftbutton = true;
+	    // 	    // *x = 50; // (double) mevent->scenePos().x();
+	    // 	    // *y = 50; // (double) mevent->scenePos().y();
+	    // 	}
+	    // }
+	    // else Rprintf("NoButton event.\n");
+	}
+	viewlist[0]->setCursor(Qt::ArrowCursor);
+	viewlist[0]->setInteractive(false);
+	viewlist[0]->setWindowTitle(QString("[ACTIVE] QGraphicsScene(View) Device"));
+	return leftbutton;
+    }
+    else {
+	// Don't do anything.  FIXME: Give feedback to the user? warning()?
+	return false;
+    }
+    return false; // to keep compiler happy
 }
 
 
@@ -674,7 +734,9 @@ static void QT_Mode(int mode, pDevDesc dev)
 
 static Rboolean QT_Locator(double *x, double *y, pDevDesc dev)
 {
-    return FALSE;
+    if (asSceneDevice(dev)->LocateOnePoint(x, y))
+	return TRUE; 
+    else return FALSE;
 }
 
 static Rboolean QT_NewFrameConfirm(pDevDesc dev)
@@ -761,7 +823,7 @@ RSceneDeviceDriver(pDevDesc dev,
     dev->haveTransparentBg = 2; // FIXME. Do we really? Check.
     dev->haveRaster = 1;
     dev->haveCapture = 1;
-    dev->haveLocator = 1;
+    dev->haveLocator = 2;
 
     /*
      * Mouse events

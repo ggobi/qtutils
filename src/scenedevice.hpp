@@ -5,6 +5,8 @@
 #include <QWidget>
 #include <QGraphicsScene>
 #include <QGraphicsItem>
+#include <QKeyEvent>
+#include <QGraphicsSceneMouseEvent>
 
 
 #include <R.h>
@@ -12,6 +14,8 @@
 #define R_USE_PROTOTYPES 0
 #include <R_ext/GraphicsEngine.h>
 #include <R_ext/GraphicsDevice.h>
+
+
 
 
 
@@ -24,18 +28,22 @@ private:
     
     bool _wantKeyboardInput; 
     bool _wantMouseInput;
+    QKeyEvent *_lastKeyEvent;
+    QGraphicsSceneMouseEvent *_lastMouseEvent;
     bool handleKeyEvent(QKeyEvent *event) {
 	if (_wantKeyboardInput) {
 	    _wantKeyboardInput = false;
-	    lastKeyEvent = event;
+	    _lastKeyEvent = event;
 	    return true;
 	}
 	else return false;
     }
-    bool handleMouseEvent(QGraphicsSceneMouseEvent * event) {
+    bool handleMouseEvent(QGraphicsSceneMouseEvent *event) {
 	if (_wantMouseInput) {
+	    Rprintf("Mouse event.\n");
+	    Rprintf("...With button %d.\n", event->button());
 	    _wantMouseInput = false;
-	    lastMouseEvent = event;
+	    _lastMouseEvent = event;
 	    return true;
 	}
 	else return false;
@@ -53,16 +61,16 @@ public:
     void setWantKeyboardInput(bool s) { _wantKeyboardInput = s; }
     bool wantMouseInput() { return _wantMouseInput; }
     void setWantMouseInput(bool s) { _wantMouseInput = s; }
-    // if either is acceptable
-    bool wantKeyOrMouseInput() { return _wantKeyboardInput & _wantMouseInput; }
-    void setWantKeyOrMouseInput(bool s) {
-	setWantKeyboardInput(s);
-	setWantMouseInput(s);
-    }
-    QKeyEvent *lastKeyEvent;
-    QGraphicsSceneMouseEvent *lastMouseEvent;
-    void resetLastKeyEvent() { lastKeyEvent = 0; }
-    void resetLastMouseEvent() { lastMouseEvent = 0; }
+    // // if either is acceptable
+    // bool wantKeyOrMouseInput() { return _wantKeyboardInput & _wantMouseInput; }
+    // void setWantKeyOrMouseInput(bool s) {
+    // 	setWantKeyboardInput(s);
+    // 	setWantMouseInput(s);
+    // }
+    QKeyEvent *lastKeyEvent() { return _lastKeyEvent; }
+    QGraphicsSceneMouseEvent *lastMouseEvent() { return _lastMouseEvent; }
+    void resetLastKeyEvent() { _lastKeyEvent = 0; }
+    void resetLastMouseEvent() { _lastMouseEvent = 0; }
 
 
 protected:
@@ -73,7 +81,7 @@ protected:
     }
     void keyReleaseEvent(QKeyEvent *event) { if (!handleKeyEvent(event)) QGraphicsScene::keyPressEvent(event); }
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) { if (!handleMouseEvent(event)) QGraphicsScene::mouseDoubleClickEvent(event); }
-    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) { if (!handleMouseEvent(event)) QGraphicsScene::mouseMoveEvent(event); }
+    // void mouseMoveEvent(QGraphicsSceneMouseEvent *event) { if (!handleMouseEvent(event)) QGraphicsScene::mouseMoveEvent(event); }
     void mousePressEvent(QGraphicsSceneMouseEvent *event) { if (!handleMouseEvent(event)) QGraphicsScene::mousePressEvent(event); }
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) { if (!handleMouseEvent(event)) QGraphicsScene::mouseReleaseEvent(event); }
     // void wheelEvent(QGraphicsSceneWheelEvent *event) if (!handleMouseEvent(event)) QGraphicsScene::w(event);
@@ -136,6 +144,7 @@ class RSceneDevice
     double StrWidthUTF8(char *str, R_GE_gcontext *gc);
 
     void ConfirmNewFrame();
+    bool LocateOnePoint(double *x, double *y);
 
 public slots:
 
