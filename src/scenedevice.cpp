@@ -419,27 +419,29 @@ RSceneDevice::ConfirmNewFrame()
     if (viewlist.size() == 0) return; // no view
     else if (viewlist.size() == 1) {
 	viewlist[0]->setWindowTitle(QString("Press Enter to see next page"));
+	bool old_interactive = viewlist[0]->isInteractive();
 	viewlist[0]->setInteractive(true);
 	viewlist[0]->activateWindow();
 	viewlist[0]->setFocus();
 	bool done = false;
-	QKeyEvent *kevent;
+	// QKeyEvent *kevent;
 	while (!done) {
-	    scene()->resetLastKeyEvent();
+	    // scene()->resetLastKeyEvent();
 	    scene()->setWantKeyboardInput(true);
 	    while (scene()->wantKeyboardInput()) {
 		// FIXME: To avoid 100% CPU usage, can we portably sleep for a bit here?
 		R_CheckUserInterrupt();
 		QApplication::processEvents();
 	    }
-	    kevent = scene()->lastKeyEvent();
-	    if ((kevent->type() == QEvent::KeyPress) &&
-		((kevent->key() == Qt::Key_Return) || (kevent->key() == Qt::Key_Enter))) {
-		// if (key->key() & (Qt::Key_Return | Qt::Key_Enter)) {
-		done = true;
-	    }
+	    // kevent = scene()->lastKeyEvent();
+	    if ((scene()->lastKeyType == QEvent::KeyPress) &&
+		((scene()->lastKeyKey == Qt::Key_Return) || 
+		 (scene()->lastKeyKey == Qt::Key_Enter))) 
+		{
+		    done = true;
+		}
 	}
-	viewlist[0]->setInteractive(false);
+	viewlist[0]->setInteractive(old_interactive);
 	viewlist[0]->setWindowTitle(QString("[ACTIVE] QGraphicsScene(View) Device"));
     }
     else {
@@ -462,63 +464,48 @@ RSceneDevice::LocateOnePoint(double *x, double *y)
     if (viewlist.size() == 0) return false; // no view
     else if (viewlist.size() == 1) {
 	viewlist[0]->setWindowTitle(QString("Click inside the device window"));
-	viewlist[0]->setInteractive(true);
 	viewlist[0]->activateWindow();
 	viewlist[0]->setFocus();
+	bool old_interactive = viewlist[0]->isInteractive();
+	viewlist[0]->setInteractive(true);
+	QGraphicsView::DragMode old_dragmode = viewlist[0]->dragMode();
 	viewlist[0]->setDragMode(QGraphicsView::NoDrag);
+	Qt::CursorShape old_cursor = viewlist[0]->cursor().shape();
 	viewlist[0]->setCursor(Qt::CrossCursor);
-	
-	// if (viewlist[0]->hasMouseTracking()) Rprintf("Mouse tracking enabled.\n");
-	// else Rprintf("Mouse tracking disabled.\n");
-
+	Qt::ContextMenuPolicy old_context = viewlist[0]->contextMenuPolicy();
+	viewlist[0]->setContextMenuPolicy(Qt::PreventContextMenu);
 	bool done = false, leftbutton = false;
-	QGraphicsSceneMouseEvent *mevent;
 	while (!done) {
-	    scene()->resetLastMouseEvent();
+	    // scene()->resetLastMouseEvent();
 	    scene()->setWantMouseInput(true);
 	    while (scene()->wantMouseInput()) {
 		// To avoid 100% CPU usage, can we portably sleep for a bit here?
 		R_CheckUserInterrupt();
 		QApplication::processEvents();
 	    }
-	    // Rprintf("Got event.\n");
-	    // mevent = scene()->lastMouseEvent();
-	    // if (mevent == 0) 
-	    // 	Rprintf("Got mevent <0>\n", mevent->button());
-	    // else 
-	    // 	Rprintf("Got mevent %d.\n", mevent->button());
-
-	    // if (mevent->button() != Qt::NoButton) {
-	    // 	done = true;
-	    // 	if (mevent->button() == Qt::LeftButton) { // else return false
-	    // 	    Rprintf("LeftButton event.\n");
-	    // 	    leftbutton = true;
-	    // 	    // *x = 50; // (double) mevent->scenePos().x();
-	    // 	    // *y = 50; // (double) mevent->scenePos().y();
-	    // 	}
-	    // }
-	    // else Rprintf("NoButton event.\n");
-
 	    QApplication::processEvents();
-	    if (scene()->lastMouseType == QEvent::GraphicsSceneMousePress && scene()->lastMouseButton != Qt::NoButton) {
-	    	done = true;
-	    	if (scene()->lastMouseButton == Qt::LeftButton) { // else return false
-	    	    // Rprintf("LeftButton event.\n");
-	    	    leftbutton = true;
-	    	    *x = (double) scene()->lastMousePos.x();
-	    	    *y = (double) scene()->lastMousePos.y();
-	    	}
-	    }
-	    // else Rprintf("NoButton event.\n");
-
+	    if (scene()->lastMouseType == QEvent::GraphicsSceneMousePress && 
+		scene()->lastMouseButton != Qt::NoButton)
+		{
+		    done = true;
+		    if (scene()->lastMouseButton == Qt::LeftButton) { // else return false
+			leftbutton = true;
+			*x = (double) scene()->lastMousePos.x();
+			*y = (double) scene()->lastMousePos.y();
+		    }
+		}
 	}
-	viewlist[0]->setCursor(Qt::ArrowCursor);
-	viewlist[0]->setInteractive(false);
+	viewlist[0]->setContextMenuPolicy(old_context);
+	viewlist[0]->setCursor(old_cursor);
+	viewlist[0]->setDragMode(old_dragmode);
+	viewlist[0]->setInteractive(old_interactive);
 	viewlist[0]->setWindowTitle(QString("[ACTIVE] QGraphicsScene(View) Device"));
 	return leftbutton;
     }
     else {
-	// Don't do anything.  FIXME: Give feedback to the user? warning()?
+	// Don't do anything.  FIXME: Give feedback to the user?
+	// warning()?
+	warning("Multiple views open.  Ignoring Locator() request.");
 	return false;
     }
     return false; // to keep compiler happy

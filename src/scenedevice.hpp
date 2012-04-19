@@ -2,9 +2,11 @@
 #ifndef QTDEVICE_SCENE_H
 #define QTDEVICE_SCENE_H
 
+#include <Qt>
 #include <QWidget>
 #include <QGraphicsScene>
 #include <QGraphicsItem>
+#include <QEvent>
 #include <QKeyEvent>
 #include <QGraphicsSceneMouseEvent>
 
@@ -28,22 +30,22 @@ private:
     
     bool _wantKeyboardInput; 
     bool _wantMouseInput;
-    QKeyEvent *_lastKeyEvent;
-    QGraphicsSceneMouseEvent *_lastMouseEvent;
+    // QKeyEvent *_lastKeyEvent;
+    // QGraphicsSceneMouseEvent *_lastMouseEvent;
     bool handleKeyEvent(QKeyEvent *event) {
 	if (_wantKeyboardInput) {
 	    _wantKeyboardInput = false;
-	    _lastKeyEvent = event;
+	    // _lastKeyEvent = event;
+	    lastKeyType = event->type();
+	    lastKeyKey = event->key();
 	    return true;
 	}
 	else return false;
     }
     bool handleMouseEvent(QGraphicsSceneMouseEvent *event) {
 	if (_wantMouseInput) {
-	    // Rprintf("Mouse event.\n");
-	    // Rprintf("...With button %d.\n", event->button());
 	    _wantMouseInput = false;
-	    _lastMouseEvent = event;
+	    // _lastMouseEvent = event;
 	    lastMouseButton = event->button();
 	    lastMousePos = event->scenePos();
 	    lastMouseType = event->type();
@@ -57,28 +59,23 @@ public:
     GraphicsSceneWithEvents() : QGraphicsScene()  { 
 	_wantKeyboardInput = false; 
 	_wantMouseInput = false;
-	resetLastKeyEvent();
-	resetLastMouseEvent();
+	// resetLastKeyEvent();
+	// resetLastMouseEvent();
     }
     bool wantKeyboardInput() { return _wantKeyboardInput; }
     void setWantKeyboardInput(bool s) { _wantKeyboardInput = s; }
     bool wantMouseInput() { return _wantMouseInput; }
     void setWantMouseInput(bool s) { _wantMouseInput = s; }
-    // // if either is acceptable
-    // bool wantKeyOrMouseInput() { return _wantKeyboardInput & _wantMouseInput; }
-    // void setWantKeyOrMouseInput(bool s) {
-    // 	setWantKeyboardInput(s);
-    // 	setWantMouseInput(s);
-    // }
-    QKeyEvent *lastKeyEvent() { return _lastKeyEvent; }
-    QGraphicsSceneMouseEvent *lastMouseEvent() { return _lastMouseEvent; }
-    void resetLastKeyEvent() { _lastKeyEvent = 0; }
-    void resetLastMouseEvent() { _lastMouseEvent = 0; }
+    // QKeyEvent *lastKeyEvent() { return _lastKeyEvent; }
+    // QGraphicsSceneMouseEvent *lastMouseEvent() { return _lastMouseEvent; }
+    // void resetLastKeyEvent() { _lastKeyEvent = 0; }
+    // void resetLastMouseEvent() { _lastMouseEvent = 0; }
 
     Qt::MouseButton lastMouseButton;
     QPointF lastMousePos;
     QEvent::Type lastMouseType;
-
+    int lastKeyKey;
+    QEvent::Type lastKeyType;
 
 protected:
 
@@ -88,7 +85,7 @@ protected:
     }
     void keyReleaseEvent(QKeyEvent *event) { if (!handleKeyEvent(event)) QGraphicsScene::keyPressEvent(event); }
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) { if (!handleMouseEvent(event)) QGraphicsScene::mouseDoubleClickEvent(event); }
-    // void mouseMoveEvent(QGraphicsSceneMouseEvent *event) { if (!handleMouseEvent(event)) QGraphicsScene::mouseMoveEvent(event); }
+    void mouseMoveEvent(QGraphicsSceneMouseEvent *event) { if (!handleMouseEvent(event)) QGraphicsScene::mouseMoveEvent(event); }
     void mousePressEvent(QGraphicsSceneMouseEvent *event) { if (!handleMouseEvent(event)) QGraphicsScene::mousePressEvent(event); }
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) { if (!handleMouseEvent(event)) QGraphicsScene::mouseReleaseEvent(event); }
     // void wheelEvent(QGraphicsSceneWheelEvent *event) if (!handleMouseEvent(event)) QGraphicsScene::w(event);

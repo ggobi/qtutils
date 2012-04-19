@@ -67,18 +67,32 @@ tryParseEval <- function(text, env)
 ##' @return A QWidget instance
 ##' @author Deepayan Sarkar
 qrepl <- function(env = .GlobalEnv,
-                  font = Qt$QFont("monospace"),
-                  incolor = qcolor("red"),
-                  outcolor = qcolor("blue"),
-                  errorcolor = qcolor("black"),
-                  html.preferred = require(xtable))
+                  ...,
+                  family = "monospace", pointsize = 12,
+                  incolor = "red",
+                  outcolor = "blue",
+                  msgcolor = "black",
+                  html.preferred = FALSE,
+                  title = sprintf("Qt REPL %s", capture.output(print(.GlobalEnv))))
 {
+    html.preferred <- html.preferred && require(xtable)
+    font <- qfont(family = family, pointsize = pointsize)
+    informat <- Qt$QTextCharFormat()
+    informat$setForeground(qbrush(incolor))
+    informat$setFont(font)
+    outformat <- Qt$QTextCharFormat()
+    outformat$setForeground(qbrush(outcolor))
+    outformat$setFont(font)
+    msgformat <- Qt$QTextCharFormat()
+    msgformat$setForeground(qbrush(msgcolor))
+    msgformat$setFont(font)
+
     ## input1: REPL-like mode, type and execute code
-    ined1 <- qeditor(rsyntax = TRUE, richtext = FALSE)
-    ined1$setCurrentFont(font)
+    ined1 <- qeditor(rsyntax = TRUE, richtext = FALSE,
+                     family = family, pointsize = pointsize, ...)
     ## input2: Editor mode, select and execute code.  input1 text gets appended here
-    ined2 <- qeditor(rsyntax = TRUE, richtext = FALSE)
-    ined2$setCurrentFont(font)
+    ined2 <- qeditor(rsyntax = TRUE, richtext = FALSE,
+                     family = family, pointsize = pointsize, ...)
     ## output
     outed <- Qt$QTextEdit()
     outed$readOnly <- TRUE
@@ -124,8 +138,7 @@ qrepl <- function(env = .GlobalEnv,
             if (mode == "input")
             {
                 ined1$selectAll()
-                ined1$setCurrentFont(font)
-                ined2$append(text)
+                ined2$appendPlainText(text)
             }
             for (i in seq_along(pe))
             {
@@ -133,11 +146,10 @@ qrepl <- function(env = .GlobalEnv,
                 output <- pe[[i]]$output
                 evis <- pe[[i]]$evis
                 ## input
-                outed$setCurrentFont(font)
-                outed$setTextColor(incolor)
+                outed$setCurrentCharFormat(informat)
                 outed$append(ein)
                 ## output
-                outed$setTextColor(outcolor)
+                outed$setCurrentCharFormat(outformat)
                 ## any captured output (by product of evaluation)
                 if (length(output))
                     outed$append(paste(output, collapse = "\n"))
@@ -145,7 +157,7 @@ qrepl <- function(env = .GlobalEnv,
                 if (inherits(evis, "try-error"))
                 {
                     outed$moveCursor(Qt$QTextCursor$End)
-                    outed$setTextColor(errorcolor)
+                    outed$setCurrentCharFormat(msgformat)
                     outed$append(paste(strsplit(as.character(evis), "\n")[[1]],
                                        collapse = "\n")) # remove final newline
                 }
@@ -155,9 +167,9 @@ qrepl <- function(env = .GlobalEnv,
                         !inherits(try(xtab <- xtable(evis$value), silent = TRUE),
                                   "try-error"))
                     {
+                        ## FIXME: need something append-like (add to end)
                         outed$moveCursor(Qt$QTextCursor$End)
                         html.output <- capture.output(print(xtab, type = "html"))
-                        ## FIXME: need something append-like (add to end)
                         outed$insertHtml(paste(html.output, collapse = "\n"))
                     }
                     else
@@ -207,8 +219,9 @@ qrepl <- function(env = .GlobalEnv,
             {
                 ined2$moveCursor(Qt$QTextCursor$Up, Qt$QTextCursor$KeepAnchor)
                 ## qmoveCursor(ined2, "up", select = TRUE)
-                parseable <- !is(try(parse(text = qselectedText_QTextEdit(ined2)), silent = TRUE), "try-error")
-                reached0 <- qcursorPosition(ined2) == 0L
+                parseable <- !is(try(parse(text = qselectedText_QTextEdit(ined2)),
+                                     silent = TRUE), "try-error")
+                reached0 <- ined2$textCursor()$position() == 0L
             }
             if (!parseable) ## qsetCursorPosition(ined2, oldPos) ## restore
                 ined2$setTextCursor(oldCursor)
@@ -258,6 +271,7 @@ qrepl <- function(env = .GlobalEnv,
 
     ## return containing splitter
     container$resize(600, 400)
+    container$setWindowTitle(title)
     container
 }
 
@@ -287,18 +301,18 @@ qrepl <- function(env = .GlobalEnv,
 
 qreplu <- function(env = .GlobalEnv,
                    ...,
-                   incolor = qcolor("red"),
-                   outcolor = qcolor("blue"),
-                   messagecolor = qcolor("black"))
+                   incolor = "red",
+                   outcolor = "blue",
+                   msgcolor = "black")
 {
-    ## ed: REPL-like mode, type and execute code
-    ed <- qeditor(richtext = FALSE, rsyntax = FALSE, ..., comp.tooltip = FALSE)
     informat <- Qt$QTextCharFormat()
     informat$setForeground(qbrush(incolor))
     outformat <- Qt$QTextCharFormat()
     outformat$setForeground(qbrush(outcolor))
     msgformat <- Qt$QTextCharFormat()
-    msgformat$setForeground(qbrush(messagecolor))
+    msgformat$setForeground(qbrush(msgcolor))
+    ## ed: REPL-like mode, type and execute code
+    ed <- qeditor(richtext = FALSE, rsyntax = FALSE, ..., comp.tooltip = FALSE)
     
     ## messages
     msg <- Qt$QLabel("")
