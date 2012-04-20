@@ -73,6 +73,7 @@ qrepl <- function(env = .GlobalEnv,
                   outcolor = "blue",
                   msgcolor = "black",
                   html.preferred = FALSE,
+                  history = TRUE,
                   title = sprintf("Qt REPL %s", capture.output(print(.GlobalEnv))))
 {
     html.preferred <- html.preferred && require(xtable)
@@ -122,8 +123,62 @@ qrepl <- function(env = .GlobalEnv,
     ## add action to execute code
     ined1$setContextMenuPolicy(Qt$Qt$ActionsContextMenu)
     ined2$setContextMenuPolicy(Qt$Qt$ActionsContextMenu)
-    ## function to perform code execution
 
+    ## History mechanism: Ctrl+Up/Down.  Unused if history=FALSE.
+    lhist <- list() # list of commands
+    ihist <- 0L     # index
+    cur_command <- ""
+    if (history)
+    {
+        addToHistory <- function(s)
+        {
+            n <- length(lhist)
+            if (n == 0 || s != lhist[[n]]) lhist[[n + 1L]] <<- s
+        }
+        prevHistoryItem <- function()
+        {
+            n <- length(lhist)
+            ihist <<-
+                if (ihist == 0) n
+                else ihist - 1L 
+            if (ihist == 0) cur_command else lhist[[ihist]]
+        }
+        nextHistoryItem <- function()
+        {
+            n <- length(lhist)
+            ihist <<- ihist + 1L
+            if (ihist == n + 1L) ihist <<- 0L
+            if (ihist == 0) cur_command else lhist[[ihist]]
+        }
+        showPrevItem <- function(...)
+        {
+            ## str(list(lhist = lhist, ihist = ihist, cur_command = cur_command))
+            ## if editing something new, make that current before changing
+            if (ihist == 0L) cur_command <<- ined1$plainText
+            ined1$setPlainText(prevHistoryItem())
+        }
+        showNextItem <- function(...)
+        {
+            ## str(list(lhist = lhist, ihist = ihist, cur_command = cur_command))
+            ## if editing something new, make that current before changing
+            if (ihist == 0L) cur_command <<- ined1$plainText
+            ined1$setPlainText(nextHistoryItem())
+        }
+
+        prevHistoryAct <- Qt$QAction(text = "Previous command", parent = ined1)
+        prevHistoryAct$setShortcut(Qt$QKeySequence("Ctrl+Up"))
+        prevHistoryAct$setShortcutContext(Qt$Qt$WidgetShortcut)
+        qconnect(prevHistoryAct, signal = "triggered", handler = showPrevItem)
+        ined1$addAction(prevHistoryAct)
+        
+        nextHistoryAct <- Qt$QAction(text = "Next command", parent = ined1)
+        nextHistoryAct$setShortcut(Qt$QKeySequence("Ctrl+Down"))
+        nextHistoryAct$setShortcutContext(Qt$Qt$WidgetShortcut)
+        qconnect(nextHistoryAct, signal = "triggered", handler = showNextItem)
+        ined1$addAction(nextHistoryAct)
+    }
+
+    ## function to perform code execution
     executeCode <- function(text, mode = c("input", "edit"))
     {
         mode <- match.arg(mode)
@@ -137,6 +192,8 @@ qrepl <- function(env = .GlobalEnv,
             msg$text <- ""
             if (mode == "input")
             {
+                if (history) addToHistory(text)
+                ihist <<- 0L
                 ined1$selectAll()
                 ined2$appendPlainText(text)
             }
@@ -211,8 +268,6 @@ qrepl <- function(env = .GlobalEnv,
             ## oldPos <- ined2$textCursor()$position()
             ined2$moveCursor(Qt$QTextCursor$EndOfLine)
             ined2$moveCursor(Qt$QTextCursor$StartOfLine, Qt$QTextCursor$KeepAnchor)
-            ## qmoveCursor(ined2, "endofline", select = FALSE)
-            ## qmoveCursor(ined2, "startofline", select = TRUE)
             parseable <- !is(try(parse(text = qselectedText_QTextEdit(ined2)), silent = TRUE), "try-error")
             reached0 <- ined2$textCursor()$position() == 0L ## qcursorPosition(ined2) == 0L
             while (!parseable && !reached0)
@@ -231,20 +286,20 @@ qrepl <- function(env = .GlobalEnv,
     qconnect(runAct2, signal = "triggered", handler = runHandler2)
     ined2$addAction(runAct2)
     
-    ## add action for text-completion (not yet in edit mode)
-    compAct1 <- Qt$QAction(text = "Complete", parent = ined1)
-    compAct1$setShortcut(Qt$QKeySequence("Ctrl+I"))
-    ## qaction(desc = "Complete", shortcut = "Ctrl+I", parent = ined1)
-    compAct1$setShortcutContext(Qt$Qt$WidgetShortcut)
-    compHandler1 <- function(checked) {
-        comps <- tryComplete(text = ined1$plainText, ined1$textCursor()$position())
-        ined1$insertPlainText(comps$addition)
-        msg$text <-
-            if (nzchar(comps$addition) || any(nzchar(comps$comps))) paste(comps$comps)
-            else "No completions."
-    }
-    qconnect(compAct1, signal = "triggered", handler = compHandler1)
-    ined1$addAction(compAct1)
+    ## ## add action for text-completion (not yet in edit mode)
+    ## compAct1 <- Qt$QAction(text = "Complete", parent = ined1)
+    ## compAct1$setShortcut(Qt$QKeySequence("Ctrl+I"))
+    ## ## qaction(desc = "Complete", shortcut = "Ctrl+I", parent = ined1)
+    ## compAct1$setShortcutContext(Qt$Qt$WidgetShortcut)
+    ## compHandler1 <- function(checked) {
+    ##     comps <- tryComplete(text = ined1$plainText, ined1$textCursor()$position())
+    ##     ined1$insertPlainText(comps$addition)
+    ##     msg$text <-
+    ##         if (nzchar(comps$addition) || any(nzchar(comps$comps))) paste(comps$comps)
+    ##         else "No completions."
+    ## }
+    ## qconnect(compAct1, signal = "triggered", handler = compHandler1)
+    ## ined1$addAction(compAct1)
 
     ## save file in edit mode
     saveAct <- Qt$QAction(text = "Save As", parent = ined2)
@@ -264,7 +319,7 @@ qrepl <- function(env = .GlobalEnv,
     loadAct$setShortcutContext(Qt$Qt$WidgetShortcut)
     loadHandler <- function(checked) {
         file <- qfile.choose(caption = "Choose file", filter = "*.R", allow.new = FALSE)
-        if (nzchar(file)) ined2$append(paste(readLines(file), collapse = "\n"))
+        if (nzchar(file)) ined2$appendPlainText(paste(readLines(file), collapse = "\n"))
     }
     qconnect(loadAct, signal = "triggered", handler = loadHandler)
     ined2$addAction(loadAct)
@@ -301,6 +356,7 @@ qrepl <- function(env = .GlobalEnv,
 
 qreplu <- function(env = .GlobalEnv,
                    ...,
+                   history = TRUE,
                    incolor = "red",
                    outcolor = "blue",
                    msgcolor = "black")
@@ -369,6 +425,70 @@ qreplu <- function(env = .GlobalEnv,
     }
     qconnect(ed, "completionsAvailable", msgCompletions)
 
+    ## History mechanism: Ctrl+Up/Down.  Unused if history=FALSE.
+    lhist <- list() # list of commands
+    ihist <- 0L     # index
+    cur_command <- ""
+    if (history)
+    {
+        addToHistory <- function(s)
+        {
+            n <- length(lhist)
+            if (n == 0 || s != lhist[[n]]) lhist[[n + 1L]] <<- s
+        }
+        prevHistoryItem <- function()
+        {
+            n <- length(lhist)
+            ihist <<-
+                if (ihist == 0) n
+                else ihist - 1L 
+            if (ihist == 0) cur_command else lhist[[ihist]]
+        }
+        nextHistoryItem <- function()
+        {
+            n <- length(lhist)
+            ihist <<- ihist + 1L
+            if (ihist == n + 1L) ihist <<- 0L
+            if (ihist == 0) cur_command else lhist[[ihist]]
+        }
+        showPrevItem <- function(...)
+        {
+            ## str(list(lhist = lhist, ihist = ihist, cur_command = cur_command))
+            ed$moveCursor(Qt$QTextCursor$End)
+            ic <- ed$textCursor()
+            ic$setPosition(lastPosition, Qt$QTextCursor$KeepAnchor)
+            ed$setTextCursor(ic)
+            ## If editing something new, make that current before changing
+            if (ihist == 0L) cur_command <<- qselectedText_QTextEdit(ed)
+            ic$removeSelectedText()
+            ed$insertPlainText(prevHistoryItem())
+        }
+        showNextItem <- function(...)
+        {
+            ## str(list(lhist = lhist, ihist = ihist, cur_command = cur_command))
+            ed$moveCursor(Qt$QTextCursor$End)
+            ic <- ed$textCursor()
+            ic$setPosition(lastPosition, Qt$QTextCursor$KeepAnchor)
+            ed$setTextCursor(ic)
+            ## If editing something new, make that current before changing
+            if (ihist == 0L) cur_command <<- qselectedText_QTextEdit(ed)
+            ic$removeSelectedText()
+            ed$insertPlainText(nextHistoryItem())
+        }
+        
+        prevHistoryAct <- Qt$QAction(text = "Previous command", parent = ed)
+        prevHistoryAct$setShortcut(Qt$QKeySequence("Ctrl+Up"))
+        prevHistoryAct$setShortcutContext(Qt$Qt$WidgetShortcut)
+        qconnect(prevHistoryAct, signal = "triggered", handler = showPrevItem)
+        ed$addAction(prevHistoryAct)
+        
+        nextHistoryAct <- Qt$QAction(text = "Next command", parent = ed)
+        nextHistoryAct$setShortcut(Qt$QKeySequence("Ctrl+Down"))
+        nextHistoryAct$setShortcutContext(Qt$Qt$WidgetShortcut)
+        qconnect(nextHistoryAct, signal = "triggered", handler = showNextItem)
+        ed$addAction(nextHistoryAct)
+    }
+    
     processCodeIfReady <- function()
     {
         ed$moveCursor(Qt$QTextCursor$End)
@@ -379,6 +499,7 @@ qreplu <- function(env = .GlobalEnv,
         parseable <- !is(try(parse(text = intext), silent = TRUE), "try-error")
         if (parseable)
         {
+            ihist <<- 0L
             ic$removeSelectedText()
             executeCode(intext)
         }
@@ -410,6 +531,7 @@ qreplu <- function(env = .GlobalEnv,
         }
         else
         {
+            if (history) addToHistory(text)
             msg$text <- "Evaluating..."
             ic <- ed$textCursor()
             ic$setPosition(lastPosition)

@@ -196,8 +196,11 @@ qsetMethod("indentCurrentLine", RCodeEditor,
 qsetMethod("cursorGlobalPosition", RCodeEditor,
            function() {
                cm <- as.matrix(cursorRect())
-               qpoint(window()$geometry$x() + cm[2, 1],
-                      window()$geometry$y() + cm[2, 2])
+               globalpos <- mapToGlobal(pos)
+               ## qpoint(window()$geometry$x() + cm[2, 1],
+               ##        window()$geometry$y() + cm[2, 2])
+               qpoint(globalpos$x() + cm[2, 1],
+                      globalpos$y() + cm[2, 2])
            })
 
 qsetSignal("completionsAvailable(QString character)", RCodeEditor)

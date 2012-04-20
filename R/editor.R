@@ -1,4 +1,5 @@
 
+
 qeditor <-
     function(file = NULL,
              readonly = FALSE,
@@ -8,15 +9,6 @@ qeditor <-
                                      ".", fixed = TRUE)[[1]],
                             1) %in% c("R", "r", "S", "r"))
 {
-    if (!is.null(file))
-    {
-        qfile <- Qt$QFile(file)
-        status <-
-            if (readonly) qfile$open(Qt$QIODevice$ReadOnly)
-            else qfile$open(Qt$QIODevice$ReadWrite)
-        ## does mode really matter if we just copy the contents and close the file?
-        if (!status) return(NULL)
-    }
     if (richtext) 
     {
         edit <- Qt$QTextEdit()
@@ -33,17 +25,34 @@ qeditor <-
     if (rsyntax)
         .Call(qt_qsetRSyntaxHighlighter, edit)
     
-    if (!is.null(file)) 
-    {
-        stream <- Qt$QTextStream()
-        stream$setDevice(qfile)
-        ## stream <- Qt$QTextStream(qfile)
-        txt <- stream$readAll()
-        if (!is.null(txt)) edit$setText(txt)
-        if (readonly) edit$setReadOnly(TRUE)
-        qfile$close()
-    }
+### NOTE NOTE NOTE: Cannot use QFile and QIODevice (Error: Cannot
+### handle Moc type 'qint64')
+    ## if (!is.null(file))
+    ## {
+    ##     qfile <- Qt$QFile(file)
+    ##     status <-
+    ##         if (readonly) qfile$open(Qt$QIODevice$ReadOnly)
+    ##         else qfile$open(Qt$QIODevice$ReadWrite)
+    ##     if (!status) return(NULL)
+    ## }
+    ## if (!is.null(file)) 
+    ## {
+    ##     stream <- Qt$QTextStream()
+    ##     stream$setDevice(qfile)
+    ##     ## stream <- Qt$QTextStream(qfile)
+    ##     txt <- stream$readAll()
+    ##     if (!is.null(txt)) edit$setText(txt)
+    ##     if (readonly) edit$setReadOnly(TRUE)
+    ##     qfile$close()
+    ## }
 
+### Instead, handle purely in R
+    if (!is.null(file) && nzchar(file)) 
+    {
+        edit$setPlainText(paste(readLines(file, warn = FALSE),
+                                collapse = "\n"))
+    }
+    if (readonly) edit$setReadOnly(TRUE)
     cursor <- edit$textCursor()
     cursor$setPosition(0)
     edit$setTextCursor(cursor)

@@ -14,7 +14,8 @@ qstr.default <- function(x, ...)
     ostr <- capture.output(print(x, ...))
     cat(paste(ostr, collapse = "\n"), file = temp)
     ## FIXME: no need to write out file
-    w <- qeditor(temp, readonly = TRUE, rsyntax = FALSE)
+    w <- qeditor(temp, readonly = TRUE, richtext = FALSE,
+                 rsyntax = FALSE, pointsize = 10)
     unlink(temp)
     w
 }
@@ -63,13 +64,13 @@ S4methodsList <- function(x)
 }
 
 
-
 qstr.function <- function(x, ...)
 {
     temp <- tempfile()
     ostr <- capture.output(print(x, ...))
     cat(paste(ostr, collapse = "\n"), file = temp)
-    wfun <- qeditor(temp, readonly = TRUE, rsyntax = TRUE)
+    wfun <- qeditor(temp, readonly = TRUE, richtext = FALSE,
+                    rsyntax = TRUE, pointsize = 10)
     unlink(temp)
     ## qsetStyleSheet("font-family : monospace", widget = wfun)
     wfun

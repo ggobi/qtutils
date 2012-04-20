@@ -1,9 +1,9 @@
 
-#include <QTextStream>
 #include <QTextEdit>
-#include <QFileInfo>
-#include <QFile>
-#include <QTextCursor>
+// #include <QTextStream>
+// #include <QFileInfo>
+// #include <QFile>
+// #include <QTextCursor>
 
 #include "RSyntaxHighlighter.h"
 
