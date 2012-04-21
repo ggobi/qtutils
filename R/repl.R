@@ -120,7 +120,6 @@ qrepl <- function(env = .GlobalEnv,
     container$setStretchFactor(1L, 0L)
     container$setStretchFactor(2L, 0L)
     msg$text <- "Type code, press Ctrl+Return to evaluate"
-    ## add action to execute code
     ined1$setContextMenuPolicy(Qt$Qt$ActionsContextMenu)
     ined2$setContextMenuPolicy(Qt$Qt$ActionsContextMenu)
 
@@ -213,7 +212,7 @@ qrepl <- function(env = .GlobalEnv,
                 ## return value of evaluation (may need to be printed)
                 if (inherits(evis, "try-error"))
                 {
-                    outed$moveCursor(Qt$QTextCursor$End)
+                    ## outed$moveCursor(Qt$QTextCursor$End)
                     outed$setCurrentCharFormat(msgformat)
                     outed$append(paste(strsplit(as.character(evis), "\n")[[1]],
                                        collapse = "\n")) # remove final newline
@@ -357,6 +356,7 @@ qrepl <- function(env = .GlobalEnv,
 qreplu <- function(env = .GlobalEnv,
                    ...,
                    history = TRUE,
+                   eval.on.newline = TRUE,
                    incolor = "red",
                    outcolor = "blue",
                    msgcolor = "black")
@@ -379,11 +379,12 @@ qreplu <- function(env = .GlobalEnv,
     container$addWidget(msg)
     container$setStretchFactor(0L, 10L)
     container$setStretchFactor(1L, 0L)
-    msg$text <- "Type code, press Ctrl+Return to evaluate"
+    msg$text <- sprintf("%s Type code, press Ctrl+Return to evaluate",
+                        capture.output(env))
 
     ed$setContextMenuPolicy(Qt$Qt$ActionsContextMenu)
 
-    ed$appendHtml("<p>Welcome to qrepl().</p> <br>")
+    ed$appendHtml("<p><i>Welcome to qreplu().</i></p> <br>")
 
     ## ed$setCurrentFont(font)
     ed$setCurrentCharFormat(informat)
@@ -503,16 +504,26 @@ qreplu <- function(env = .GlobalEnv,
             ic$removeSelectedText()
             executeCode(intext)
         }
+        else 
+        {
+            msg$text <- "Invalid or incomplete input"
+            ed$moveCursor(Qt$QTextCursor$End)
+        }
     }
 
     ## add action to execute code
 
     runAct <- Qt$QAction(text = "Execute", parent = ed)
     runAct$setShortcut(Qt$QKeySequence("Ctrl+Return"))
+    ## runAct$setShortcut(Qt$QKeySequence(Qt$Qt$Key_Return))
     runAct$setShortcutContext(Qt$Qt$WidgetShortcut) ## only triggered when widget has focus
     qconnect(runAct, signal = "triggered", handler = processCodeIfReady)
     ed$addAction(runAct)
 
+    ## Also do this everytime Enter is pressed
+    if (eval.on.newline)
+        qconnect(ed, signal = "enterPressed", handler = processCodeIfReady)
+    
     closeAct <- Qt$QAction(text = "Close REPL", parent = ed)
     closeAct$setShortcut(Qt$QKeySequence("Ctrl+Q"))
     closeAct$setShortcutContext(Qt$Qt$WidgetShortcut) ## only triggered when widget has focus
@@ -523,6 +534,9 @@ qreplu <- function(env = .GlobalEnv,
 
     executeCode <- function(text)
     {
+        if (!nzchar(text)) return (FALSE)
+        msg$text <- "Evaluating..."
+        msg$update()
         pe <- tryParseEval(text = text, env = env)
         if (is(pe, "try-error"))
         {
@@ -532,51 +546,49 @@ qreplu <- function(env = .GlobalEnv,
         else
         {
             if (history) addToHistory(text)
-            msg$text <- "Evaluating..."
-            ic <- ed$textCursor()
-            ic$setPosition(lastPosition)
-            lastPosition <<- lastPosition - 2L
-            ed$setTextCursor(ic)
-            ed$moveCursor(Qt$QTextCursor$StartOfLine, Qt$QTextCursor$KeepAnchor)
+            ## code already deleted from prompt onwards. Now to remove prompt as well.
+            
+            lastPosition <<- 0 # to allow deleting prompt
+            ed$moveCursor(Qt$QTextCursor$Left, Qt$QTextCursor$KeepAnchor)
+            ed$moveCursor(Qt$QTextCursor$Left, Qt$QTextCursor$KeepAnchor)
+            ed$moveCursor(Qt$QTextCursor$Left, Qt$QTextCursor$KeepAnchor)
             ed$textCursor()$removeSelectedText()
+
             for (i in seq_along(pe))
             {
                 ein <- pe[[i]]$ein
                 output <- pe[[i]]$output
                 evis <- pe[[i]]$evis
                 ## input
-                ## ed$setCurrentFont(font)
-                ## ed$setTextColor(incolor)
                 ed$setCurrentCharFormat(informat)
-                ed$insertPlainText(ein)
-                ed$insertPlainText("\n")
+                ed$appendPlainText(ein)
+                ## ed$insertPlainText("\n")
                 ## output
-                ## ed$setTextColor(outcolor)
                 ed$setCurrentCharFormat(outformat)
                 ## any captured output (by-product of evaluation)
                 if (length(output))
-                    ed$insertPlainText(paste(output, collapse = "\n"))
+                    ed$appendPlainText(paste(output, collapse = "\n"))
                 ## return value of evaluation (may need to be printed)
                 if (inherits(evis, "try-error"))
                 {
-                    ed$moveCursor(Qt$QTextCursor$End)
-                    ## ed$setTextColor(errorcolor)
+                    ## ed$moveCursor(Qt$QTextCursor$End)
                     ed$setCurrentCharFormat(msgformat)
-                    ed$insertPlainText(paste(strsplit(as.character(evis), "\n")[[1]],
-                                    collapse = "\n")) # remove final newline
+                    ed$appendPlainText(paste(strsplit(as.character(evis), "\n")[[1]],
+                                             collapse = "\n")) # remove final newline
                 }
                 else if (evis$visible)
                 {
                     text.output <- capture.output(evis$value)
-                    ed$insertPlainText(paste(text.output, collapse = "\n"))
+                    ed$appendPlainText(paste(text.output, collapse = "\n"))
                 }
             }
             ## ed$setTextColor(incolor)
             ed$setCurrentCharFormat(informat)
-            ed$insertPlainText("\n> ")
+            ed$appendPlainText("> ")
             ed$moveCursor(Qt$QTextCursor$End)
             lastPosition <<- ed$textCursor()$position()
-            msg$text <- "Type code, press Ctrl+Return to evaluate"
+            msg$text <- sprintf("%s Type code, press Ctrl+Return to evaluate",
+                                capture.output(evalenv))
         }
     }
 

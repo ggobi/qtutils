@@ -1,15 +1,14 @@
 
 
-
 ## Class that subclasses QPlainTextEdit and overrides TAB key etc
 
 qsetClass("RCodeEditor", Qt$QPlainTextEdit,
           constructor = function(family = "monospace", pointsize = 14,
                                  underscore.assign = TRUE, comp.tooltip = TRUE) {
               this$setFont(qfont(family = family, pointsize = pointsize))
-              this$centerOnScroll <- TRUE
+              this$centerOnScroll <- FALSE
               this$setLineWrapMode(Qt$QTextEdit$NoWrap)
-              this$tabMode <- "complete"
+              ## this$tabMode <- "complete"
               this$uassign <- underscore.assign
               this$ctooltip <- comp.tooltip
           })
@@ -204,7 +203,9 @@ qsetMethod("cursorGlobalPosition", RCodeEditor,
            })
 
 qsetSignal("completionsAvailable(QString character)", RCodeEditor)
-           
+
+qsetSignal("enterPressed()", RCodeEditor)
+
 qsetMethod("keyPressEvent", RCodeEditor,
            function(e) {
                if (ctooltip && Qt$QToolTip$isVisible()) Qt$QToolTip$hideText()
@@ -229,6 +230,8 @@ qsetMethod("keyPressEvent", RCodeEditor,
                    ## spaces <- computeTabSpaces(document()$toPlainText())
                    spaces <- computeTabSpaces(currentDocument(uptocursor = TRUE))
                    insertPlainText(base::paste(rep(" ", spaces), collapse = ""))
+                   ## emit signal to indicate new line (REPL may want to execute line)
+                   enterPressed()
                }
                else if (et == "}")
                {

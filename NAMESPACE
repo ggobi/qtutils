@@ -25,8 +25,6 @@ S3method(qexport, QGraphicsView)
 ## export(qaddItem.QListWidget)
 ## S3method(qaddItem, QListWidget)
 
-
-
 export(qdataview, qstr, qrecover, qbrowser)
 
 S3method(qstr, default)
@@ -44,7 +42,7 @@ S3method(qdataview, data.frame)
 
 export(data.import, data.browse, qpager)
 
-export(qsetCursorPosition)
+## export(qsetCursorPosition)
 
 ## Procedure to add new wrapper functions:
 
