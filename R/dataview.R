@@ -1,22 +1,4 @@
 
-## ## FIXME: not clear what this actually does.  Setting w = qlineEdit()
-## ## makes the text editable, but that seems to be about it.
-
-## qsetHeaderLabels <-
-##     function(x, colnames = NULL, rownames = NULL,
-##              extend = FALSE)
-## {
-##     .Deprecated("none")
-##     if (extend)
-##     {
-##         cdim <- qsetDim(x)
-##         if ((length(rownames) > cdim[1]) || (length(colnames) > cdim[2]))
-##             qsetDim(x,
-##                     max(length(rownames), cdim[1]),
-##                     max(length(colnames), cdim[2]))
-##     }
-##     .Call(qt_qsetHeaderLabels_QTableWidget, x, colnames, rownames)
-## }
 
 qdataview <- function(x, ...)
 {

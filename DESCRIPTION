@@ -3,6 +3,7 @@ Version: 0.0-2
 Title: Miscellaneous Qt-based utilities
 Author: Deepayan Sarkar
 Depends: R (>= 2.6.0), qtbase
+Suggests: xtable
 Imports: qtbase
 LinkingTo: qtbase
 Maintainer: Deepayan Sarkar <deepayan.sarkar@gmail.com>

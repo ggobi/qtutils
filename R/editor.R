@@ -1,13 +1,30 @@
 
-
-qeditor <-
-    function(file = NULL,
-             readonly = FALSE,
-             richtext = FALSE,
-             ...,
-             rsyntax = tail(strsplit(basename(file),
-                                     ".", fixed = TRUE)[[1]],
-                            1) %in% c("R", "r", "S", "r"))
+##' An editor widget.
+##'
+##' This function creates an editor widget, optionally initializing it
+##' with the contents of a file.
+##' 
+##' @title An editor widget.
+##' @param file Character string giving the name of the file to be
+##' displayed.
+##' @param readonly Logical flag indicating whether the editor should
+##' be in read-only initially.
+##' @param richtext Logical flag indicating whether the editor should
+##' be cabaple of displaying rich-text (HTML).
+##' @param ... Further arguments, passed on to
+##' \code{\link{RCodeEditor}} if relevant.
+##' @param rsyntax Logical flag indicating whether R syntax
+##' highlighting should be applied to the contents of the editor. 
+##' 
+##' @return If \code{richtext=TRUE}, a QTextEdit instance.  Otherwise
+##' a \code{\link{RCodeEditor}} instance.
+##' 
+##' @author Deepayan Sarkar
+qeditor <- function(file = NULL,
+                    readonly = FALSE,
+                    richtext = FALSE,
+                    ...,
+                    rsyntax = tail(strsplit(basename(file), ".", fixed = TRUE)[[1]], 1) %in% c("R", "r", "S", "r"))
 {
     if (richtext) 
     {
@@ -64,21 +81,28 @@ qeditor <-
 
 
 
-## qselectedText <- function(x, ...) UseMethod("qselectedText")
 
-## qselectedText.QTextEdit <- function(x, ...)
-## {
-##     ans <- x$textCursor()$selection()$toPlainText()
-##     if (is.null(ans)) ""
-##     else ans
-## }
-
-qpager <-
-    function(file,
-             header = "",
-             title = "R Information",
-             delete.file = FALSE,
-             parent = NULL)
+##' .. content for \description{} (no empty lines) ..
+##'
+##' .. content for \details{} ..
+##' 
+##' @title A pager replacement
+##' @param file The file whose content is to be displayed.
+##' @param header Ignored.
+##' @param title Character string to be used as the widget title if applicable.
+##' @param delete.file Logical flag indicating whether the file should
+##' be deleted after being shown. 
+##' @param parent An optional QTabWidget instance.  If supplied, the
+##' editor widget is added as a child.
+##' 
+##' @return A QTextEdit or RCodeEditor instance (see \code{\link{qeditor}}).
+##' 
+##' @author Deepayan Sarkar
+qpager <- function(file,
+                   header = "",
+                   title = "R Information",
+                   delete.file = FALSE,
+                   parent = NULL)
 {
     ans <- qeditor(file = file, readonly = TRUE)
     if (delete.file)
@@ -94,9 +118,20 @@ qpager <-
     }
     else 
     {
+        ans$setWindowTitle(title)
         ans$resize(600, 400)
         ans
     }
 }
 
 
+
+
+## qselectedText <- function(x, ...) UseMethod("qselectedText")
+
+## qselectedText.QTextEdit <- function(x, ...)
+## {
+##     ans <- x$textCursor()$selection()$toPlainText()
+##     if (is.null(ans)) ""
+##     else ans
+## }

@@ -1,2 +1,0 @@
-
-showAndClose(qpager("dataview.R"))

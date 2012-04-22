@@ -13,15 +13,14 @@
 ##' @author Deepayan Sarkar
 qfile.choose <-
     function(caption = "", dir = "", filter = "",
-             allow.new = FALSE,
-             parent = NULL)
+             allow.new = FALSE, parent = NULL)
 {
     FUN <-
         if (allow.new) Qt$QFileDialog$getSaveFileName
         else Qt$QFileDialog$getOpenFileName
     ans <- FUN(parent, as.character(caption),
                path.expand(dir), as.character(filter))
-    (ans)
+    ans
 }
 
 qdir.choose <- function(caption = "", dir = "", parent = NULL)
@@ -30,13 +29,11 @@ qdir.choose <- function(caption = "", dir = "", parent = NULL)
     ans <- FUN(parent,
                as.character(caption),
                as.character(dir))
-    (ans)
+    ans
 }
 
-qgetColor <- function(parent = NULL, title = "",
-                      alpha = 1)
+qgetColor <- function(parent = NULL, title = "", alpha = 1)
 {
-    ok <- TRUE
     FUN <- Qt$QColorDialog$getColor
     ans <- FUN(Qt$QColor(255, 255, 255),
                parent,
@@ -47,6 +44,21 @@ qgetColor <- function(parent = NULL, title = "",
     else NA_character_
 }
 
+##' .. content for \description{} (no empty lines) ..
+##'
+##' .. content for \details{} ..
+##' 
+##' @title qgetDouble
+##' 
+##' @param title window title
+##' @param label Character string giving a label for the selection. 
+##' @param value Initial value.
+##' @param minValue Minimum value allowed.
+##' @param maxValue Maximum value allowed.
+##' @param decimals The maximum number of decimals allowed. 
+##' @param parent 
+##' @return NULL
+##' @author Deepayan Sarkar
 qgetDouble <-
     function(title = "Choose value",
              label = "Enter a numeric value",
