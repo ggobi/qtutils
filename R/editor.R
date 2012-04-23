@@ -124,14 +124,3 @@ qpager <- function(file,
     }
 }
 
-
-
-
-## qselectedText <- function(x, ...) UseMethod("qselectedText")
-
-## qselectedText.QTextEdit <- function(x, ...)
-## {
-##     ans <- x$textCursor()$selection()$toPlainText()
-##     if (is.null(ans)) ""
-##     else ans
-## }

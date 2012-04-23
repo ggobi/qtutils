@@ -3,16 +3,15 @@
 ##'
 ##' .. content for \details{} ..
 ##' @title A Qt web browser widget
-##' @param x The URL to view.
+##' @param url The URL to view.
 ##' @param ... Ignored.
 ##' @return A QWebView instance
 ##' @author Deepayan Sarkar
-qwebbrowser <- function(x, ...)
+qwebbrowser <- function(url, ...)
 {
-    ## str(list(x = x, ...))
     w <- Qt$QWebView()
-    w$load(Qt$QUrl(x))
-    w$show()
+    w$load(Qt$QUrl(url))
+    ## w$show()
     w
 }
 

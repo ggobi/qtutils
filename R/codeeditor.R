@@ -4,7 +4,7 @@
 
 qsetClass("RCodeEditor", Qt$QPlainTextEdit,
           constructor = function(family = "monospace", pointsize = 14,
-                                 underscore.assign = TRUE, comp.tooltip = TRUE) {
+                                 underscore.assign = FALSE, comp.tooltip = TRUE) {
               this$setFont(qfont(family = family, pointsize = pointsize))
               this$centerOnScroll <- FALSE
               this$setLineWrapMode(Qt$QTextEdit$NoWrap)

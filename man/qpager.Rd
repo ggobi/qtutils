@@ -1,11 +1,19 @@
 \name{qpager}
 \alias{qpager}
-\title{A pager replacement}
+\alias{qwebbrowser}
+\title{Qt based implementations of pager an browser}
 \usage{
 qpager(file, header = "", title = "R Information",
        delete.file = FALSE, parent)
+qwebbrowser(url, \dots)
 }
-\description{ A Qt-based implementation of a pager (file viewer) }
+
+\description{
+  These functions provide Qt-based implementations of a pager (file
+  viewer) and web browser.  They can be used as the \R\ options
+  \code{"pager"} and \code{"browser"}.
+}
+
 \details{ This function may be set as the \code{"pager"} option. }
 \value{A QTextEdit or RCodeEditor instance (see \code{\link{qeditor}}).}
 \author{Deepayan Sarkar}
@@ -17,4 +25,6 @@ qpager(file, header = "", title = "R Information",
     be deleted after being shown.}
   \item{parent}{An optional QTabWidget instance.  If supplied, the
     editor widget is added as a child.}
+  \item{url}{The URL to view.}
+  \item{\dots}{Ignored by \code{qwebbrowser}}
 }

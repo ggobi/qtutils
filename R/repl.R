@@ -50,21 +50,46 @@ tryParseEval <- function(text, env)
 
 
 
-##' Creates a Qt Widget that emulates the R REPL
+##' Creates a Qt Widget that emulates the R REPL.
 ##'
 ##' This widget tries to emulate the behaviour of the R command-line
 ##' interface (Read-Eval-Print-Loop) in a GUI.  The current
 ##' implementation is essentially a proof-of-concept, and not meant
 ##' for serious use.
+##'
+##' Two versions are available.  \code{qrepl} emulates the
+##' conventional REPL interface where commands are typed at a command
+##' prompt and evaluated when Enter is pressed (except that parse
+##' errors are trapped and not evaluated).   \code{qrepl} provides an
+##' alternative interface with two command specification modes and a
+##' common output area.   Commands can be entered either in input
+##' mode, where one or more commands may be typed and then  executed
+##' using Ctrl+Enter, or in edit mode, where commands are typed in a
+##' file, and selections may be executed similarly.  The latter mode
+##' is intended to facilitate the recommended method of working in
+##' ESS, where commands are entered and modified within an editor, and
+##' executed as necessary.  When working in edit mode, commands
+##' executed are automatically added to the editor area, keeping a
+##' record of those commands.
+##'
+##' All code editing interfaces support command completion and code
+##' indentation (but the rules are not yet customizable).
 ##' 
 ##' @title A Qt based REPL emulator
 ##' @param env The evaluation environment for the REPL. 
-##' @param font A QFont instance. 
+##' @param ... Further arguments, passed on to \code{\link{RCodeEditor}}.
+##' @param family Font family to be used.
+##' @param pointsize Font pointsize to be used.
 ##' @param incolor The color used for code that is evaluated.
 ##' @param outcolor The color used for output.
-##' @param errorcolor The color used for error messages.
-##' @param html.preferred Logical.  Whether HTML output is preferred (for table-like objects).
-##' @return A QWidget instance
+##' @param msgcolor The color used for messages.
+##' @param html.preferred Logical flag indicating whether HTML output is preferred (for table-like objects).
+##' @param history Logical flag indicating whether command history
+##' should be available.  If enabled, pressing Ctrl+Up or Down arrows
+##' allow navigation  through previous commands.   History is
+##' currently not retained across invocations.  
+##' @param title Character string giving window title.
+##' @return A QWidget instance.
 ##' @author Deepayan Sarkar
 qrepl <- function(env = .GlobalEnv,
                   ...,
@@ -353,6 +378,20 @@ qrepl <- function(env = .GlobalEnv,
 ## qaddAction(ined2, zoomoutAct2)
 
 
+
+##' .. content for \description{} (no empty lines) ..
+##'
+##' .. content for \details{} ..
+##' @title 
+##' @param env 
+##' @param ... 
+##' @param history 
+##' @param eval.on.newline 
+##' @param incolor 
+##' @param outcolor 
+##' @param msgcolor 
+##' @return 
+##' @author Deepayan Sarkar
 qreplu <- function(env = .GlobalEnv,
                    ...,
                    history = TRUE,

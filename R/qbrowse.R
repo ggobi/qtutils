@@ -2,6 +2,44 @@
 ## "object browser" type tools
 
 
+qbrowser <- function(namespaces = FALSE)
+    ## if (namespaces), then loaded namespaces are shown (as well as unexported objects in them?)
+{
+    pkgs <- .packages()
+    nsps <- loadedNamespaces()
+    if (namespaces)
+    {
+        entries <- union(pkgs, nsps)
+        hasns <- entries %in% nsps
+        ans <- vector(mode = "list", length = length(entries) + 1)
+        names(ans) <- c("Global Workspace",
+                        paste(ifelse(hasns, "Namespace", "Package"), entries, sep = ":"))
+        ans[[1]] <- .GlobalEnv
+        for (i in seq_along(ans)[-1])
+        {
+            ans[[i]] <-
+                if (hasns[i-1]) getNamespace(entries[i-1])
+                else as.environment(paste("package", entries[i-1], sep = ":"))
+        }
+    }
+    else
+    {
+        entries <- pkgs
+        ans <- vector(mode = "list", length = length(entries) + 1)
+        names(ans) <- c("Global Workspace", paste("Package", entries, sep = ":"))
+        ans[[1]] <- .GlobalEnv
+        for (i in seq_along(ans)[-1])
+        {
+            ans[[i]] <-
+                as.environment(paste("package", entries[i-1], sep = ":"))
+        }
+    }
+    w <- qstr(ans)
+    w$resize(600, 400)
+    w
+}
+
+
 qrecover <- function()
 {
     if(.isMethodsDispatchOn()) {
@@ -57,41 +95,4 @@ qrecover <- function()
         cat(gettext("No suitable frames for qrecover()\n"))
 }
 
-
-qbrowser <- function(namespaces = FALSE)
-    ## if (namespaces), then loaded namespaces are shown (as well as unexported objects in them?)
-{
-    pkgs <- .packages()
-    nsps <- loadedNamespaces()
-    if (namespaces)
-    {
-        entries <- union(pkgs, nsps)
-        hasns <- entries %in% nsps
-        ans <- vector(mode = "list", length = length(entries) + 1)
-        names(ans) <- c("Global Workspace",
-                        paste(ifelse(hasns, "Namespace", "Package"), entries, sep = ":"))
-        ans[[1]] <- .GlobalEnv
-        for (i in seq_along(ans)[-1])
-        {
-            ans[[i]] <-
-                if (hasns[i-1]) getNamespace(entries[i-1])
-                else as.environment(paste("package", entries[i-1], sep = ":"))
-        }
-    }
-    else
-    {
-        entries <- pkgs
-        ans <- vector(mode = "list", length = length(entries) + 1)
-        names(ans) <- c("Global Workspace", paste("Package", entries, sep = ":"))
-        ans[[1]] <- .GlobalEnv
-        for (i in seq_along(ans)[-1])
-        {
-            ans[[i]] <-
-                as.environment(paste("package", entries[i-1], sep = ":"))
-        }
-    }
-    w <- qstr(ans)
-    w$resize(600, 400)
-    w
-}
 
