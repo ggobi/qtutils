@@ -588,7 +588,9 @@ RSceneDevice::MetricInfo(int c,
     QRectF bb = fm.boundingRect(uc); 
     *ascent = (-bb.top());
     *descent = (bb.bottom());
-    *width = bb.width();
+    // *width = bb.width(); // this is width of pixel bounding rect
+    *width = (double) fm.width(uc);  // this is advance width.  Seems
+				     // to work a little better
     // Rprintf("Metric Info: %g, %g, %g\n", *ascent, *descent, *width);
 //     *ascent = (double) (bb.height());
 //     *descent = (double) (0.0);
