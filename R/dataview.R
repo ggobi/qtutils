@@ -40,7 +40,12 @@ qdataview.matrix <- qdataview.table <- qdataview.array <-
 
 qdataview.data.frame <- function(x, ...)
 {
-    qdataview.array(do.call(cbind, lapply(x, as.character)))
+    ## qdataview.array(do.call(cbind, lapply(x, as.character)))
+    m <- qdataFrameModel(x, ...)
+    v <- Qt$QTableView()
+    v$setModel(m)
+    v$resize(600, 400)
+    v
 }
 
 

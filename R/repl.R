@@ -147,6 +147,7 @@ qrepl <- function(env = .GlobalEnv,
     msg$text <- "Type code, press Ctrl+Return to evaluate"
     ined1$setContextMenuPolicy(Qt$Qt$ActionsContextMenu)
     ined2$setContextMenuPolicy(Qt$Qt$ActionsContextMenu)
+    outed$setContextMenuPolicy(Qt$Qt$ActionsContextMenu)
 
     ## History mechanism: Ctrl+Up/Down.  Unused if history=FALSE.
     lhist <- list() # list of commands
@@ -264,6 +265,14 @@ qrepl <- function(env = .GlobalEnv,
         }
     }
 
+    clearAct <- Qt$QAction(text = "Clear contents", parent = outed)
+    clearAct$setShortcut(Qt$QKeySequence("Ctrl+L"))
+    clearHandler <- function(checked) { outed$setPlainText("") }
+    ## clearAct$setShortcutContext(Qt$Qt$WidgetShortcut) ## only triggered when widget has focus
+    qconnect(clearAct, signal = "triggered", handler = clearHandler)
+    outed$addAction(clearAct)
+
+
     ##qaction(desc = "Execute", shortcut = "Ctrl+Return", parent = ined1)
     runAct1 <- Qt$QAction(text = "Execute", parent = ined1)
     runAct1$setShortcut(Qt$QKeySequence("Ctrl+Return"))
@@ -326,13 +335,17 @@ qrepl <- function(env = .GlobalEnv,
     ## ined1$addAction(compAct1)
 
     ## save file in edit mode
-    saveAct <- Qt$QAction(text = "Save As", parent = ined2)
+    saveFileName <- NULL
+    saveAct <- Qt$QAction(text = "Save", parent = ined2)
     saveAct$setShortcut(Qt$QKeySequence("Ctrl+S"))
     saveAct$setShortcutContext(Qt$Qt$WidgetShortcut)
     saveHandler <- function(checked) {
-        savetext <- ined2$plainText
-        file <- qfile.choose(caption = "Choose output file", filter = "*.R", allow.new = TRUE)
-        if (nzchar(file)) cat(savetext, file = file)
+        if (is.null(saveFileName))
+        {
+            file <- qfile.choose(caption = "Choose output file", filter = "R code (*.R *.r *.S *.s);;All files (*)", allow.new = TRUE)
+            if (nzchar(file)) saveFileName <<- file
+        }
+        if (!is.null(saveFileName)) cat(ined2$plainText, file = saveFileName)
     }
     qconnect(saveAct, signal = "triggered", handler = saveHandler)
     ined2$addAction(saveAct)
@@ -342,8 +355,11 @@ qrepl <- function(env = .GlobalEnv,
     loadAct$setShortcut(Qt$QKeySequence("Ctrl+O"))
     loadAct$setShortcutContext(Qt$Qt$WidgetShortcut)
     loadHandler <- function(checked) {
-        file <- qfile.choose(caption = "Choose file", filter = "*.R", allow.new = FALSE)
-        if (nzchar(file)) ined2$appendPlainText(paste(readLines(file), collapse = "\n"))
+        file <- qfile.choose(caption = "Choose file", filter = "R code (*.R *.r *.S *.s);;All files (*)", allow.new = FALSE)
+        if (nzchar(file)) {
+            ined2$appendPlainText(paste(readLines(file), collapse = "\n"))
+            saveFileName <<- NULL
+        }
     }
     qconnect(loadAct, signal = "triggered", handler = loadHandler)
     ined2$addAction(loadAct)
