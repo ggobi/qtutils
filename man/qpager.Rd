@@ -10,7 +10,7 @@ qwebbrowser(url, \dots)
 
 \description{
   These functions provide Qt-based implementations of a pager (file
-  viewer) and web browser.  They can be used as the \R\ options
+  viewer) and web browser.  They can be used as the \R options
   \code{"pager"} and \code{"browser"}.
 }
 

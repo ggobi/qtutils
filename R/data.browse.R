@@ -1,3 +1,12 @@
+##' Widget displaying available datasets
+##'
+##' @title Dataset viewer
+##' 
+##' @param all Logical indicating whether datasets from unattached
+##' packages should also be shown
+##' 
+##' @return A QWidget instance
+##' @author Deepayan Sarkar
 data.browse <- function(all = TRUE)
 {
     available <-
