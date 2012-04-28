@@ -1,8 +1,11 @@
 
 ##' Exports a Qt object, usually as a bitmap image.
 ##'
-##' .. content for \details{} ..
-##'
+##' A generic function that is meant to export a Qt object to an
+##' external file.  Currently, only export to some image formats is
+##' supported.  This is used, in particular, to allow exporting the
+##' contents of a \code{\link{qsceneDevice}} via a context menu item
+##' for a corresponding view. 
 ##' 
 ##' @title Export Qt object
 ##' @param x 
