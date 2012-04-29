@@ -4,9 +4,6 @@
 #include <R_ext/Rdynload.h>
 
 #include "editor.h"
-#include "dataview.h"
-#include "listview.h"
-#include "textedit.h"
 
 SEXP qt_qsceneDevice(SEXP width, SEXP height, SEXP pointsize, SEXP family); 
 /* , SEXP rscene); */
@@ -17,8 +14,7 @@ void R_init_qtutils(DllInfo *dll);
 
 static R_CallMethodDef CallEntries[] = {
 
-#include "calldefs.inc"
-
+    CALLDEF(qt_qsetRSyntaxHighlighter, 1),
     CALLDEF(qt_qsceneDevice, 4), /* 5 */
 
     {NULL, NULL, 0}
