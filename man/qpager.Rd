@@ -14,7 +14,6 @@ qwebbrowser(url, \dots)
   \code{"pager"} and \code{"browser"}.
 }
 
-\details{ This function may be set as the \code{"pager"} option. }
 \value{A QTextEdit or RCodeEditor instance (see \code{\link{qeditor}}).}
 \author{Deepayan Sarkar}
 \arguments{

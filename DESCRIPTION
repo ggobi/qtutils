@@ -8,4 +8,5 @@ Imports: qtbase
 LinkingTo: qtbase
 Maintainer: Deepayan Sarkar <deepayan.sarkar@gmail.com>
 Description: Miscellaneous Qt-based tools for R
+URL: http://qtinterfaces.r-forge.r-project.org
 License: LGPL (>= 2)

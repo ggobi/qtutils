@@ -7,17 +7,20 @@ library(qtutils)
 wtop <- Qt $ QWidget()
 ltop <- Qt $ QGridLayout()
 wtop $ setLayout(ltop)
+wtop $ resize(800, 600)
 wtop
 
 pval <- Qt $ QDoubleSpinBox()
 pval $ setRange(0, 1)
 pval $ setSingleStep(0.01)
+pval $ setValue(0.5)
 
 ltop $ addWidget(Qt $ QLabel("Prob"), 0, 0)
 ltop $ addWidget(pval, 0, 1)
 
 nval <- Qt $ QSpinBox()
 nval $ setRange(1L, 100000L)
+nval $ setValue(15L)
 
 ltop $ addWidget(Qt $ QLabel("Size"), 0, 2)
 ltop $ addWidget(nval, 0, 3)

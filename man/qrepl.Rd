@@ -26,7 +26,7 @@ qreplu(env = .GlobalEnv,
   interface (Read-Eval-Print-Loop) in a GUI.  The current implementation
   is essentially a proof-of-concept, and not meant for serious use.
 
-  Two versions are available.  \code{qrepl} emulates the conventional
+  Two versions are available.  \code{qreplu} emulates the conventional
   REPL interface where commands are typed at a command prompt and
   evaluated when Enter is pressed (except that parse errors are trapped
   and not evaluated).  \code{qrepl} provides an alternative interface
