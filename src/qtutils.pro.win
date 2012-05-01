@@ -1,0 +1,18 @@
+
+TEMPLATE = lib
+
+# Input
+
+HEADERS += RSyntaxHighlighter.h editor.h
+HEADERS += scenedevice.hpp devhelpers.hpp
+
+SOURCES += init.c imports.cpp 
+SOURCES += RSyntaxHighlighter.cpp editor.cpp 
+SOURCES += scenedevice.cpp devhelpers.cpp
+
+## FIXME
+
+INCLUDEPATH += c:/Rtools/Rhome/R-2-5-BRANCH/include
+LIBS += -Lc:/Rtools/Rhome/R-2-5-BRANCH/bin -lR
+
+
