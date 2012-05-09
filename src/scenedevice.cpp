@@ -11,12 +11,12 @@
 #include "devhelpers.hpp"
 #include "scenedevice.hpp"
 
+#define QDEV_DPI 72
 
 extern "C" {
 
 Rboolean
 RSceneDeviceDriver(pDevDesc dev,
-		   double width, double height,
 		   double ps,
 		   RSceneDevice *qdev);
 
@@ -27,27 +27,17 @@ qt_qsceneDevice(SEXP width,
 		SEXP family);
 // SEXP rscene);
 
-// SEXP 
-// qt_qsetScene(SEXP rview, SEXP rscene);
-
-// SEXP
-// qt_qsceneView(SEXP x); 
-
 }
-
-
 
 
 typedef Rboolean
 (*RSceneDeviceCreateFun)(pDevDesc,
-			 double width, double height,
 			 double ps,
 			 RSceneDevice *qdev);
 
 
 static GEDevDesc*
-createRSceneDevice(double width, double height,
-		   double ps,
+createRSceneDevice(double ps,
 		   RSceneDevice *qdev,
 		   RSceneDeviceCreateFun init_fun);
 
@@ -60,10 +50,7 @@ RSceneDevice *startdev(double width,
 
 
 static void
-do_QTScene(double width,
-	   double height,
-	   double pointsize,
-	   RSceneDevice *qdev);
+do_QTScene(double pointsize, RSceneDevice *qdev);
 
 SEXP
 qt_qsceneDevice(SEXP width,
@@ -82,28 +69,6 @@ qt_qsceneDevice(SEXP width,
 }
 
 
-// SEXP 
-// qt_qsetScene(SEXP rview, SEXP rscene)
-// {
-//     // rview is new smoke-style, rscene is old-style
-//     unwrapSmoke(rview, QGraphicsView)->
-// 	setScene(unwrapQObject(rscene, QGraphicsScene));
-//     return R_NilValue;
-// }
-
-// SEXP
-// qt_qsceneView(SEXP scene)
-// {
-//     QGraphicsView *v = new QGraphicsView(unwrapQObject(scene, QGraphicsScene), 0);
-//     v->setRenderHints(QPainter::TextAntialiasing);
-//     v->setInteractive(true);
-//     // v->setDragMode(QGraphicsView::RubberBandDrag);
-//     v->setDragMode(QGraphicsView::ScrollHandDrag);
-//     return wrapQWidget(v);
-// }
-
-
-
 static
 RSceneDevice *startdev(double width,
 		       double height,
@@ -111,23 +76,20 @@ RSceneDevice *startdev(double width,
 		       const char *family)
 // GraphicsSceneWithEvents *scene)
 {
+    if (width <= 0 || height <= 0) {
+	error("Invalid width or height: (%g, %g)", 
+	      width, height);
+    }
     GraphicsSceneWithEvents *scene = new GraphicsSceneWithEvents();
-    RSceneDevice *dev = new RSceneDevice(width * 72, height * 72, 
-					 pointsize, family, scene);
+    RSceneDevice *dev = new RSceneDevice(width * QDEV_DPI, height * QDEV_DPI, pointsize, family, scene);
     return dev;
 }
 
 
 static void
-do_QTScene(double width,
-	   double height,
-	   double pointsize,
-	   RSceneDevice *qdev)
+do_QTScene(double pointsize, RSceneDevice *qdev)
 {
-    if (width <= 0 || height <= 0) {
-	error("Invalid width or height in do_QTScene: (%g, %g)", width, height);
-    }
-    createRSceneDevice(width, height, pointsize, 
+    createRSceneDevice(pointsize, 
 		       qdev, RSceneDeviceDriver);
     return;
 }
@@ -147,7 +109,7 @@ RSceneDevice::RSceneDevice(double width, double height,
     setDeviceNumber(curDevice());
     _scene->setSceneRect(0.0, 0.0, width, height);
     clip_rect = _scene->addRect(scene->sceneRect());
-    do_QTScene(width, height, pointsize, this);
+    do_QTScene(pointsize, this);
 }
 
 // RSceneDevice::~RSceneDevice()
@@ -580,8 +542,10 @@ RSceneDevice::MetricInfo(int c,
     double lineheight = gc->lineheight;
     int fontface = gc->fontface;
     char* fontfamily = gc->fontfamily;
-    bool Unicode = mbcslocale; // && (gc->fontface != 5);
-    if (c < 0) { Unicode = TRUE; c = -c; }
+    // Don't need the following (I think); we always have unicode
+    // bool Unicode = mbcslocale; // && (gc->fontface != 5);
+    // if (c < 0) { Unicode = TRUE; c = -c; }
+    if (c < 0) { c = -c; }
     QFontMetricsF fm(r2qFont(fontfamily, fontface, ps, cex, 
 			     lineheight, defaultFamily()));
     QChar uc = QChar(c);
@@ -774,7 +738,6 @@ static Rboolean QT_NewFrameConfirm(pDevDesc dev)
 /* Device driver entry point */
 Rboolean
 RSceneDeviceDriver(pDevDesc dev,
-		   double width, double height,
 		   double ps,
 		   RSceneDevice *qdev)
 {
@@ -795,8 +758,6 @@ RSceneDeviceDriver(pDevDesc dev,
     /*
      * Device physical characteristics
      */
-    double DPI = 72;
-
     dev->left   = dev->clipLeft   = 0;
     dev->right  = dev->clipRight  = qdev->scene()->width();
     dev->bottom = dev->clipBottom = qdev->scene()->height();
@@ -806,8 +767,8 @@ RSceneDeviceDriver(pDevDesc dev,
     dev->xCharOffset = 0.4900;
     dev->yCharOffset = 0.3333;
     dev->yLineBias = 0.1;
-    dev->ipr[0] = 1.0 / DPI;
-    dev->ipr[1] = 1.0 / DPI;
+    dev->ipr[0] = 1.0 / QDEV_DPI;
+    dev->ipr[1] = 1.0 / QDEV_DPI;
     /*
      * Device capabilities
      */
@@ -839,9 +800,6 @@ RSceneDeviceDriver(pDevDesc dev,
     // gettingEvent; This is set while getGraphicsEvent is actively
     // looking for events
 
-
-
-
     /*
      * Device functions
      */
@@ -871,8 +829,7 @@ RSceneDeviceDriver(pDevDesc dev,
 
 
 static GEDevDesc*
-createRSceneDevice(double width, double height,
-		   double ps,
+createRSceneDevice(double ps,
 		   RSceneDevice *qdev,
 		   RSceneDeviceCreateFun init_fun)
 {
@@ -887,7 +844,7 @@ createRSceneDevice(double width, double height,
 	if (!(dev = (pDevDesc) calloc(1, sizeof(DevDesc))))
 	    return 0; /* or error() */
 	/* set up device driver or free 'dev' and error() */
-	if (!init_fun(dev, width, height, ps, qdev)) {
+	if (!init_fun(dev, ps, qdev)) {
 	    free(dev); // delete qdev; // ??
 	    error("unable to start device");
 	}
