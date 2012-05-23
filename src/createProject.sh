@@ -39,10 +39,10 @@ macx{
 LIBS += -framework R
 }
 unix{
-LIBS += -L${R_HOME}/lib -lR
+LIBS += -L${R_HOME}/lib
 }
 win32{
-LIBS += -L${R_HOME}/bin -lR
+LIBS += -L${R_HOME}/bin
 }
 
 " > qtutils.pro
