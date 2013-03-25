@@ -714,24 +714,23 @@ static Rboolean QT_NewFrameConfirm(pDevDesc dev)
 }
 
 
-
-// // FIXME: not OK
-// static void QT_Size(double *left, double *right,
-// 		    double *bottom, double *top,
-// 		    pDevDesc dev)
-// {
-//     // FIXME FIXME FIXME : should I do this here?
-//     dev->left = 0;
-//     dev->right = asSceneDevice(dev)->scene()->width();
-//     dev->bottom = asSceneDevice(dev)->scene()->height();
-//     dev->top = 0;
-//     // Rprintf("Someone called QT_Size\n");
-//     *left = 0.0;
-//     *right = asSceneDevice(dev)->scene()->width();
-//     *bottom = asSceneDevice(dev)->scene()->height();
-//     *top = 0.0;
-//     return;
-// }
+// FIXME: not OK
+static void QT_Size(double *left, double *right,
+		    double *bottom, double *top,
+		    pDevDesc dev)
+{
+    // FIXME FIXME FIXME : should I do this here?
+    // dev->left = 0;
+    // dev->right = asSceneDevice(dev)->scene()->width();
+    // dev->bottom = asSceneDevice(dev)->scene()->height();
+    // dev->top = 0;
+    // Rprintf("Someone called QT_Size\n");
+    *left = 0.0;
+    *right = asSceneDevice(dev)->scene()->width();
+    *bottom = asSceneDevice(dev)->scene()->height();
+    *top = 0.0;
+    return;
+}
 
 
 
@@ -816,7 +815,7 @@ RSceneDeviceDriver(pDevDesc dev,
     dev->polygon =     (void (*)()) QT_Polygon;
     dev->polyline =    (void (*)()) QT_Polyline;
     dev->rect =        (void (*)()) QT_Rect;
-    dev->size =        NULL; // (void (*)()) QT_Size;
+    dev->size =        (void (*)()) QT_Size;
     // dev->strWidth =  (double (*)()) QT_StrWidth;
     // dev->text =        (void (*)()) QT_Text;
     // dev->onexit =      (void (*)()) QT_OnExit; NULL is OK
