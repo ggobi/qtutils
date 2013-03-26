@@ -81,7 +81,9 @@ RSceneDevice *startdev(double width,
 	      width, height);
     }
     GraphicsSceneWithEvents *scene = new GraphicsSceneWithEvents();
-    RSceneDevice *dev = new RSceneDevice(width * QDEV_DPI, height * QDEV_DPI, pointsize, family, scene);
+    RSceneDevice *dev = new RSceneDevice(width * QDEV_DPI, 
+					 height * QDEV_DPI, 
+					 pointsize, family, scene);
     return dev;
 }
 
@@ -416,6 +418,112 @@ RSceneDevice::ConfirmNewFrame()
 }
 
 
+void RSceneDevice::EventHelper(int code, pDevDesc dev)
+{
+    bool old_interactive;
+    QGraphicsView::DragMode old_dragmode;
+    Qt::CursorShape old_cursor;
+    Qt::ContextMenuPolicy old_context;
+    QList<QGraphicsView *> viewlist = scene()->views();
+    if (viewlist.size() == 1) { 
+	// FIXME: else need to do more (0 or multiple).
+	if (code == 1) { // initialize
+	    QApplication::processEvents(); // discard pending events
+	    if (isEnvironment(dev->eventEnv)) {
+		SEXP prompt = findVar(install("prompt"), dev->eventEnv);
+		if (length(prompt) == 1) {
+		    viewlist[0]->setWindowTitle(QString(CHAR(asChar(prompt))));
+		}
+	    }
+	    viewlist[0]->activateWindow();
+	    viewlist[0]->setFocus();
+	    old_interactive = viewlist[0]->isInteractive();
+	    viewlist[0]->setInteractive(true);
+	    old_dragmode = viewlist[0]->dragMode();
+	    viewlist[0]->setDragMode(QGraphicsView::NoDrag);
+	    old_cursor = viewlist[0]->cursor().shape();
+	    viewlist[0]->setCursor(Qt::CrossCursor);
+	    old_context = viewlist[0]->contextMenuPolicy();
+	    viewlist[0]->setContextMenuPolicy(Qt::PreventContextMenu);
+	}
+	else if (code == 2) { // looking
+	    // scene()->resetLastMouseEvent();
+	    scene()->setWantMouseInput(true);
+	    scene()->setWantKeyboardInput(true);
+	    while (scene()->wantKeyboardInput() && scene()->wantMouseInput()) {
+		R_CheckUserInterrupt();
+		QApplication::processEvents();
+	    }
+	    QApplication::processEvents();
+	    if (dev->gettingEvent) {
+		if (scene()->wantKeyboardInput()) {
+		    // this means we found a mouse event
+		    R_MouseEvent revent;
+		    int rbuttons;
+		    switch (scene()->lastMouseButton)
+			{
+			case Qt::LeftButton:
+			    rbuttons = leftButton;
+			    break;
+			case Qt::RightButton:
+			    rbuttons = rightButton;
+			    break;
+			case Qt::MidButton:
+			    rbuttons = middleButton;
+			    break;
+			case Qt::NoButton:
+			    rbuttons = 0;
+			    break;
+			default: 
+			    rbuttons = 0;
+			    Rprintf("Unidentified MouseButton: %d\n", 
+				    scene()->lastMouseButton);
+			}
+		    switch (scene()->lastMouseType)
+			{
+			case QEvent::GraphicsSceneMouseMove: 
+			    revent = meMouseMove;
+			    break;
+			case QEvent::GraphicsSceneMousePress: 
+			    revent = meMouseDown;
+			    break;
+			case QEvent::GraphicsSceneMouseRelease: 
+			    revent = meMouseUp;
+			    break;
+			default: 
+			    revent = meMouseDown;
+			    Rprintf("Unidentified MouseType: %d\n", 
+				    scene()->lastMouseType);
+			}
+		    double rx = scene()->lastMousePos.x();
+		    double ry = scene()->lastMousePos.y();
+		    doMouseEvent(dev, revent, rbuttons, rx, ry);
+		}
+		else {
+		    // we found a keyboard event
+		    QString keyText = "";
+		    R_KeyName rkey = knUNKNOWN;
+		    if (scene()->lastKeyType == QEvent::KeyPress) {
+			keyText = scene()->lastKeyText;
+		    }
+		    QByteArray ba = keyText.toLocal8Bit();
+		    const char *cstr = ba.data();
+		    // doKeybd(dev, R_KeyName rkey, const char *keyname);
+		    doKeybd(dev, rkey, cstr);
+		}
+	    }
+	}
+	else if (code == 0) { // done, wrap up
+	    viewlist[0]->setContextMenuPolicy(old_context);
+	    viewlist[0]->setCursor(old_cursor);
+	    viewlist[0]->setDragMode(old_dragmode);
+	    viewlist[0]->setInteractive(old_interactive);
+	    viewlist[0]->setWindowTitle(QString("[ACTIVE] QGraphicsScene(View) Device"));
+	}
+    }
+}
+
+
 bool 
 RSceneDevice::LocateOnePoint(double *x, double *y)
 {
@@ -713,6 +821,12 @@ static Rboolean QT_NewFrameConfirm(pDevDesc dev)
     return TRUE; 
 }
 
+static void QT_EventHelper(pDevDesc dev, int code)
+{
+    if (dev->gettingEvent)
+	asSceneDevice(dev)->EventHelper(code, dev);
+}
+
 
 // FIXME: not OK
 static void QT_Size(double *left, double *right,
@@ -791,12 +905,12 @@ RSceneDeviceDriver(pDevDesc dev,
     /*
      * Mouse events
      */
-//     dev->canGenMouseDown = TRUE;
-//     dev->canGenMouseMove = TRUE;
-//     dev->canGenMouseUp = TRUE; 
-//     dev->canGenKeybd = TRUE;
+    dev->canGenMouseDown = TRUE;
+    dev->canGenMouseMove = TRUE;
+    dev->canGenMouseUp = TRUE; 
+    dev->canGenKeybd = TRUE;
 
-    // gettingEvent; This is set while getGraphicsEvent is actively
+    // dev->gettingEvent; This is set while getGraphicsEvent is actively
     // looking for events
 
     /*
@@ -821,6 +935,7 @@ RSceneDeviceDriver(pDevDesc dev,
     // dev->onexit =      (void (*)()) QT_OnExit; NULL is OK
     // dev->getEvent = SEXP (*getEvent)(SEXP, const char *);
     dev->newFrameConfirm = (Rboolean (*)()) QT_NewFrameConfirm;
+    dev->eventHelper = (void (*)()) QT_EventHelper;
     // dev->
     return TRUE;
 }

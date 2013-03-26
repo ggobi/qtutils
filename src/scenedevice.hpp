@@ -38,6 +38,7 @@ private:
 	    // _lastKeyEvent = event;
 	    lastKeyType = event->type();
 	    lastKeyKey = event->key();
+	    lastKeyText = event->text();
 	    return true;
 	}
 	else return false;
@@ -75,6 +76,7 @@ public:
     QPointF lastMousePos;
     QEvent::Type lastMouseType;
     int lastKeyKey;
+    QString lastKeyText;
     QEvent::Type lastKeyType;
 
 protected:
@@ -148,6 +150,7 @@ class RSceneDevice
     double StrWidthUTF8(char *str, R_GE_gcontext *gc);
 
     void ConfirmNewFrame();
+    void EventHelper(int code, pDevDesc dev);
     bool LocateOnePoint(double *x, double *y);
 
 public slots:
