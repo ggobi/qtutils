@@ -42,7 +42,7 @@ dragplot <- function(..., xlim = NULL, ylim = NULL, xaxs = "r", yaxs = "r") {
         NULL
     }
     
-    setGraphicsEventHandlers(prompt = "Click and drag, q will not quit",
+    setGraphicsEventHandlers(prompt = "Click and drag, q will quit",
                              onMouseDown = dragmousedown,
                              onMouseUp = mouseup,
                              onKeybd = keydown)
@@ -53,4 +53,4 @@ dragplot(rnorm(1000), rnorm(1000))
 
 
 getGraphicsEvent()
-par(savepar)
+

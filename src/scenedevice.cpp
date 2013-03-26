@@ -425,8 +425,9 @@ void RSceneDevice::EventHelper(int code, pDevDesc dev)
     Qt::CursorShape old_cursor;
     Qt::ContextMenuPolicy old_context;
     QList<QGraphicsView *> viewlist = scene()->views();
+    // Rprintf("Code: %d\n", code);
     if (viewlist.size() == 1) { 
-	// FIXME: else need to do more (0 or multiple).
+	// FIXME: else (0 or multiple) need to do more, even to do nothing.
 	if (code == 1) { // initialize
 	    QApplication::processEvents(); // discard pending events
 	    if (isEnvironment(dev->eventEnv)) {
@@ -498,6 +499,7 @@ void RSceneDevice::EventHelper(int code, pDevDesc dev)
 		    double rx = scene()->lastMousePos.x();
 		    double ry = scene()->lastMousePos.y();
 		    doMouseEvent(dev, revent, rbuttons, rx, ry);
+		    QApplication::processEvents();
 		}
 		else {
 		    // we found a keyboard event
@@ -510,6 +512,7 @@ void RSceneDevice::EventHelper(int code, pDevDesc dev)
 		    const char *cstr = ba.data();
 		    // doKeybd(dev, R_KeyName rkey, const char *keyname);
 		    doKeybd(dev, rkey, cstr);
+		    QApplication::processEvents();
 		}
 	    }
 	}
@@ -823,8 +826,8 @@ static Rboolean QT_NewFrameConfirm(pDevDesc dev)
 
 static void QT_EventHelper(pDevDesc dev, int code)
 {
-    if (dev->gettingEvent)
-	asSceneDevice(dev)->EventHelper(code, dev);
+    // if (dev->gettingEvent)
+    asSceneDevice(dev)->EventHelper(code, dev);
 }
 
 
