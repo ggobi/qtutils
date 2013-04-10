@@ -2,4 +2,3 @@
 .noGenerics <- TRUE
 
 deviceIsInteractive("QT")
-
