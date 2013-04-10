@@ -333,20 +333,22 @@ RSceneDevice::TextUTF8(double x, double y, char *str,
     double lineheight = gc->lineheight;
     int fontface = gc->fontface;
     char* fontfamily = gc->fontfamily; // [201] ??
+    QFont f = r2qFont(fontfamily, fontface, ps, cex, lineheight, defaultFamily());
+    QFontMetricsF fm(f);
     QString qstr = QString::fromUtf8(str);
+    // QRectF bb = fm.boundingRect(qstr); 
     // we have a choice between using QGraphicsTextItem and
     // QGraphicsSimpleTextItem.  We'll use the first because it allows
     // us to make them HTML links later from R
-    QGraphicsTextItem 
-	*text = scene()->addText(qstr, 
-				 r2qFont(fontfamily, fontface, ps, cex, lineheight,
-					 defaultFamily()));
+    QGraphicsTextItem *text = scene()->addText(qstr, f);
     text->setDefaultTextColor(r2qColor(col)); // for QGraphicsTextItem
     // text->setBrush(QBrush(r2qColor(col))); // for QGraphicsSimpleTextItem
     QRectF brect = text->boundingRect();
     text->rotate(-rot);
-    text->translate(-hadj * brect.width(), -0.7 * brect.height());
+    // text->translate(-hadj * brect.width(), -0.7 * brect.height());
+    text->translate(-hadj * brect.width(), -fm.height());
     text->setPos(x, y);
+    // Rprintf("%lf, %lf, %lf, %lf : %s\n", hadj, bb.width(), brect.width(), cex, str);
     addClippedItem(text);
     return;
 }
@@ -663,12 +665,11 @@ RSceneDevice::MetricInfo(int c,
     QRectF bb = fm.boundingRect(uc); 
     *ascent = (-bb.top());
     *descent = (bb.bottom());
-    // *width = bb.width(); // this is width of pixel bounding rect
-    *width = (double) fm.width(uc);  // this is advance width.  Seems
-				     // to work a little better
+    *width = bb.width(); // this is width of pixel bounding rect
+    // *width = (double) fm.width(uc);  // this is advance width.
     // Rprintf("Metric Info: %g, %g, %g\n", *ascent, *descent, *width);
-//     *ascent = (double) (bb.height());
-//     *descent = (double) (0.0);
+    // *ascent = (double) (bb.height());
+    // *descent = (double) (0.0);
 //     *width = (double) fm.width(uc);
     return;
 }

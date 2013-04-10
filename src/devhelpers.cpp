@@ -36,8 +36,8 @@ r2qFont(const char *fontfamily,
 	fontwt = 1;
 
     QString ff;
-//     if (fontface == 5) ff = QString("symbol");
-//     else 
+    if (fontface == 5) ff = QString("symbol");
+    else 
     if (strlen(fontfamily) == 0) ff = dff;
     else ff = QString(fontfamily);
 
