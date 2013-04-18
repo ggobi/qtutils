@@ -132,6 +132,30 @@ QT <- function(rscene, ..., antialias = TRUE, opengl = FALSE)
              })
     gview$addAction(printVisibleAct)
 
+
+    ## Actions to disable/enable scroll bars
+    scrollbarAct <- Qt$QAction("Hide Scroll Bars", gview)
+    scrollbarAct$setCheckable(TRUE)
+    scrollbarAct$setChecked(TRUE)
+    qconnect(scrollbarAct,
+             signal = "triggered",
+             handler = function(checked) {
+                 if (checked) 
+                 {
+                     gview$setVerticalScrollBarPolicy(Qt$Qt$ScrollBarAlwaysOff)
+                     gview$setHorizontalScrollBarPolicy(Qt$Qt$ScrollBarAlwaysOff)
+                 }
+                 else 
+                 {
+                     gview$setVerticalScrollBarPolicy(Qt$Qt$ScrollBarAsNeeded)
+                     gview$setHorizontalScrollBarPolicy(Qt$Qt$ScrollBarAsNeeded)
+                 }
+             })
+    gview$addAction(scrollbarAct)
+    gview$setVerticalScrollBarPolicy(Qt$Qt$ScrollBarAlwaysOff)
+    gview$setHorizontalScrollBarPolicy(Qt$Qt$ScrollBarAlwaysOff)
+
+    
     ## Action to export (to image file).  This is a bit more involved,
     ## so factor out as separate function.
     addImageExportAction(gview)
