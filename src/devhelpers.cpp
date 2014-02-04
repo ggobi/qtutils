@@ -1,4 +1,6 @@
 
+#include "devhelpers.hpp"
+
 #include <qtbase.h>
 
 #define R_USE_PROTOTYPES 0
@@ -8,7 +10,6 @@ extern "C" {
 #include <R_ext/GraphicsDevice.h>
 }
 
-#include "devhelpers.hpp"
 
 
 QFont
@@ -73,6 +74,5 @@ Qt::PenStyle lty2style(int lty)
     default:
     	return Qt::SolidLine;
     }
-    return Qt::SolidLine;
 }
 
