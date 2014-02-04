@@ -1,8 +1,13 @@
 
 #include <qtbase.h>
+
 #define R_USE_PROTOTYPES 0
+
+extern "C" {
 #include <R_ext/GraphicsEngine.h>
 #include <R_ext/GraphicsDevice.h>
+}
+
 #include "devhelpers.hpp"
 
 
@@ -54,19 +59,20 @@ Qt::PenStyle lty2style(int lty)
 {
     switch (lty) {
     case LTY_SOLID:
-	return Qt::SolidLine;
+    	return Qt::SolidLine;
     case LTY_DASHED:
-	return Qt::DashLine;
+    	return Qt::DashLine;
     case LTY_DOTTED:
-	return Qt::DotLine;
+    	return Qt::DotLine;
     case LTY_DOTDASH:
-	return Qt::DashDotLine;
-	// FIXME: these (and more) need to be custom patterns
+    	return Qt::DashDotLine;
+    	// FIXME: these (and more) need to be custom patterns
     case LTY_LONGDASH:
     case LTY_TWODASH:
-	return Qt::DashDotDotLine;
+    	return Qt::DashDotDotLine;
     default:
-	return Qt::SolidLine;
+    	return Qt::SolidLine;
     }
+    return Qt::SolidLine;
 }
 

@@ -344,10 +344,15 @@ RSceneDevice::TextUTF8(double x, double y, char *str,
     text->setDefaultTextColor(r2qColor(col)); // for QGraphicsTextItem
     // text->setBrush(QBrush(r2qColor(col))); // for QGraphicsSimpleTextItem
     QRectF brect = text->boundingRect();
-    text->rotate(-rot);
+    // text->rotate(-rot);
+    text->setRotation(-rot);
     // text->translate(-hadj * brect.width(), -0.7 * brect.height());
-    text->translate(-hadj * brect.width(), -fm.height());
-    text->setPos(x, y);
+
+    // text->translate(-hadj * brect.width(), -fm.height());
+    // text->setPos(x, y);
+
+    text->setPos(x - hadj * brect.width(), y - fm.height());
+
     // Rprintf("%lf, %lf, %lf, %lf : %s\n", hadj, bb.width(), brect.width(), cex, str);
     addClippedItem(text);
     return;
