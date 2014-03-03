@@ -1,10 +1,9 @@
 Package: qtutils
-Version: 0.1-5
+Version: 0.2-1
 Title: Miscellaneous Qt-based utilities
 Author: Deepayan Sarkar
 Depends: R (>= 2.14.0), qtbase
 Suggests: xtable
-Imports: qtbase
 LinkingTo: qtbase
 Maintainer: Deepayan Sarkar <deepayan.sarkar@gmail.com>
 Description: Miscellaneous Qt-based tools for R
