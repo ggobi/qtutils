@@ -1,5 +1,5 @@
 Package: qtutils
-Version: 0.2-1
+Version: 0.2-2
 Title: Miscellaneous Qt-based utilities
 Author: Deepayan Sarkar
 Depends: R (>= 2.14.0), qtbase

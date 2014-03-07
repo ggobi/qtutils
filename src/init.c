@@ -4,6 +4,7 @@
 #include <R_ext/Rdynload.h>
 
 #include "editor.h"
+#include "imageUtils.h"
 
 SEXP qt_qsceneDevice(SEXP width, SEXP height, SEXP pointsize, SEXP family); 
 /* , SEXP rscene); */
@@ -16,6 +17,10 @@ static R_CallMethodDef CallEntries[] = {
 
     CALLDEF(qt_qsetRSyntaxHighlighter, 1),
     CALLDEF(qt_qsceneDevice, 4), /* 5 */
+    CALLDEF(qt_qimage2matrix_gray, 1),
+    CALLDEF(qt_matrix2qimage_gray, 2),
+    CALLDEF(qt_qimage2matrix_rgb, 2),
+    CALLDEF(qt_matrix2qimage_rgb, 5),
 
     {NULL, NULL, 0}
 };

@@ -17,11 +17,14 @@ QT += widgets
 # Input
 
 HEADERS += RSyntaxHighlighter.h editor.h
+HEADERS += imageUtils.h
 HEADERS += scenedevice.hpp devhelpers.hpp
+
 
 SOURCES += init.c imports.cpp 
 SOURCES += RSyntaxHighlighter.cpp editor.cpp 
 SOURCES += scenedevice.cpp devhelpers.cpp
+SOURCES += imageUtils.cpp
 
 INCLUDEPATH += ${R_INCLUDE_DIR}
 INCLUDEPATH += ${CLINK_CPPFLAGS/-I/}

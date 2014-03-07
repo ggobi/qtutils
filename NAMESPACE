@@ -12,12 +12,15 @@ export(RCodeEditor)
 
 export(qsceneDevice, QT)
 
+export(qimage2matrix, matrix2qimage)
+
 ## exportToFile
 
 export(qexport)
 S3method(qexport, QWidget)
 S3method(qexport, QGraphicsScene)
 S3method(qexport, QGraphicsView)
+
 
 
 ## S3method(qselectedText, QTextEdit)
