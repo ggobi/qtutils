@@ -347,8 +347,9 @@ RSceneDevice::TextUTF8(double x, double y, char *str,
     QTransform transform;
     transform.translate(x, y);
     transform.rotate(-rot);
+    transform.translate(-hadj * brect.width(), -1.3 * fm.ascent());
     // transform.translate(-hadj * brect.width(), -0.7 * fm.height());
-    transform.translate(-hadj * brect.width(), -0.7 * brect.height());
+    // transform.translate(-hadj * brect.width(), -0.7 * brect.height());
     text->setTransform(transform);
 
     // Rprintf("(%f,%f,%f) %lf, %lf, %lf : %s\n", 
